@@ -9,14 +9,22 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Network)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Network)
 
 add_executable(Client
   src/main.cpp
+  src/protocol.cpp
+  src/clientapp.cpp
+
+  include/protocol.h
+  include/clientapp.h
 )
 
-target_link_libraries(Client Qt${QT_VERSION_MAJOR}::Core)
+target_link_libraries(Client
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Network
+)
 
 include(GNUInstallDirs)
 install(TARGETS Client
