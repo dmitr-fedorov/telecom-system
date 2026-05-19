@@ -16,9 +16,13 @@ add_executable(Client
   src/main.cpp
   src/protocol.cpp
   src/clientapp.cpp
+  src/messagefactory.cpp
+  src/datagenerator.cpp
 
   include/protocol.h
   include/clientapp.h
+  include/messagefactory.h
+  include/datagenerator.h
 )
 
 target_link_libraries(Client

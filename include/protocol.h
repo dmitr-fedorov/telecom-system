@@ -8,16 +8,16 @@
 namespace protocol
 {
 
-inline constexpr auto TYPE = "type";
-inline constexpr auto CLIENT_ID = "client_id";
-inline constexpr auto TIMESTAMP = "timestamp";
+inline constexpr auto kType = "type";
+inline constexpr auto kClientId = "client_id";
+inline constexpr auto kTimestamp = "timestamp";
 
-inline constexpr auto ACK = "Ack";
-inline constexpr auto START = "Start";
+inline constexpr auto kAck = "Ack";
+inline constexpr auto kStart = "Start";
 
-inline constexpr auto NETWORKMETRICS = "NetworkMetrics";
-inline constexpr auto DEVICESTATUS = "DeviceStatus";
-inline constexpr auto LOG = "Log";
+inline constexpr auto kNetworkMetrics = "NetworkMetrics";
+inline constexpr auto kDeviceStatus = "DeviceStatus";
+inline constexpr auto kLog = "Log";
 
 inline constexpr auto TCP_PACKET_DELIMETER = '\n';
 

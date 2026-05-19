@@ -104,9 +104,9 @@ void ClientApp::processMessage(const QByteArray& message)
 void ClientApp::handleJsonMessage(const QJsonObject& object)
 {
     const QString type =
-        object[protocol::TYPE].toString();
+        object[protocol::kType].toString();
 
-    if (type == protocol::ACK)
+    if (type == protocol::kAck)
     {
         _is_connection_accepted = true;
 

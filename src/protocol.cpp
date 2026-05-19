@@ -45,8 +45,8 @@ QJsonObject CreateAckMessage(const QString& client_id)
 {
     QJsonObject object;
 
-    object[TYPE] = ACK;
-    object[CLIENT_ID] = client_id;
+    object[kType] = kAck;
+    object[kClientId] = client_id;
     object["message"] = "Connection accepted";
 
     return object;
