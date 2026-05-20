@@ -1,7 +1,8 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
+
+#include "../include/servercontroller.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,5 +20,9 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+    ServerController _server_controller;
+
+private slots:
+    void startStopClients();
 };
-#endif // MAINWINDOW_H

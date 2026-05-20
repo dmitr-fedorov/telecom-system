@@ -17,11 +17,14 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS
 
 add_executable(${PROJECT_NAME}
     include/mainwindow.h
+    include/servercontroller.h
 
     src/mainwindow.cpp
+    src/servercontroller.cpp
     src/main.cpp
 
     forms/mainwindow.ui
+
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

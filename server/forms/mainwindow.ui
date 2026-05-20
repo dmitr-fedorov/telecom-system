@@ -72,7 +72,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QTableWidget" name="tw_client_info"/>
+     <widget class="QTableWidget" name="tw_clients_info"/>
     </item>
     <item>
      <widget class="QTableWidget" name="tw_clients_data"/>
