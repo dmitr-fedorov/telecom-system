@@ -4,31 +4,57 @@ ServerController::ServerController(
     QObject* parent)
     : QObject(parent)
 {
+    _server = new TcpServerManager();
+    _server->moveToThread(&_server_thread);
+
+    connect(&_server_thread, &QThread::started,
+            _server, &TcpServerManager::startServer);
+
+    connect(&_server_thread, &QThread::finished,
+            _server, &QObject::deleteLater);
+
+    connect(_server, &TcpServerManager::eventOccurred,
+            this, &ServerController::eventOccurred);
+
+    _server_thread.start();
 }
 
-void ServerController::StartStopClients()
+ServerController::~ServerController()
 {
-    if (!_is_clients_started) {
-        // TcpServerManager->sendJsonCommand
-        emit EventOccurred(
-            "Start command sent to clients");
-    }
-    else
+    if (_server != nullptr)
     {
-        // TcpServerManager->sendJsonCommand
-        emit EventOccurred(
-            "Stop command sent to clients");
+        QMetaObject::invokeMethod(
+            _server,
+            &TcpServerManager::stopServer,
+            Qt::BlockingQueuedConnection);
     }
 
-
-
+    _server_thread.quit();
+    _server_thread.wait();
 }
 
-void ServerController::ApplyConfiguration(
+void ServerController::startClients()
+{
+    QMetaObject::invokeMethod(
+        _server,
+        &TcpServerManager::startClients,
+        Qt::QueuedConnection);
+}
+
+void ServerController::stopClients()
+{
+    QMetaObject::invokeMethod(
+        _server,
+        &TcpServerManager::stopClients,
+        Qt::QueuedConnection);
+}
+
+void ServerController::applyConfiguration(
     int limit_value)
 {
     // TcpServerManager->sendJsonConfig to clients
-    emit EventOccurred(
+
+    emit eventOccurred(
         QString("Configuration applied. "
                 "Limit value = %1")
             .arg(limit_value));

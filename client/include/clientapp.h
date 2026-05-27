@@ -7,7 +7,7 @@
 #include <QTcpSocket>
 #include <QTimer>
 
-#include "../include/protocol.h"
+#include "../../shared/include/protocol.h"
 
 class ClientApp : public QObject
 {

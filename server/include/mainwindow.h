@@ -23,6 +23,10 @@ private:
 
     ServerController _server_controller;
 
+    bool _is_clients_sending = false;
+
 private slots:
-    void startStopClients();
+    void onClientsStartStopClicked();
+
+    void onEventOccured(const QString& event);
 };

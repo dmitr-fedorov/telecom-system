@@ -18,13 +18,14 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS
 add_executable(${PROJECT_NAME}
     include/mainwindow.h
     include/servercontroller.h
+    include/tcpservermanager.h
 
     src/mainwindow.cpp
     src/servercontroller.cpp
+    src/tcpservermanager.cpp
     src/main.cpp
 
     forms/mainwindow.ui
-
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -32,5 +33,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    Qt6::Widgets Qt6::Network
+    Qt6::Widgets
+    Qt6::Network
+    Shared
 )

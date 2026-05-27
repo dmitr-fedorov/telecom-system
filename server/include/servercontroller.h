@@ -2,13 +2,9 @@
 
 #include <QDateTime>
 #include <QObject>
+#include <QThread>
 
-struct ClientInfo
-{
-    QString client_id;
-    QString ip_address;
-    QString status;
-};
+#include "../include/tcpservermanager.h"
 
 struct ClientData
 {
@@ -26,22 +22,26 @@ public:
     explicit ServerController(
         QObject* parent = nullptr);
 
-signals:
-    void ClientInfoReceived(
-        const ClientInfo& info);
-
-    void ClientDataReceived(
-        const ClientData& data);
-
-    void EventOccurred(
-        const QString& text);
+    ~ServerController();
 
 public slots:
-    void StartStopClients();
+    void startClients();
+    void stopClients();
 
-    void ApplyConfiguration(
+    void applyConfiguration(
         int limit_value);
 
+signals:
+    void clientInfoReceived(
+        const ClientInfo& info);
+
+    void clientDataReceived(
+        const ClientData& data);
+
+    void eventOccurred(
+        const QString& event);
+
 private:
-    bool _is_clients_started = false;
+    QThread _server_thread;
+    TcpServerManager* _server = nullptr;
 };

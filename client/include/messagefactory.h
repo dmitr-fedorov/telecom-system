@@ -6,7 +6,7 @@
 #include <QString>
 #include <QRandomGenerator>
 
-#include "protocol.h"
+#include "../../shared/include/protocol.h"
 
 class MessageFactory
 {
