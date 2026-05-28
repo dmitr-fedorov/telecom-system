@@ -48,28 +48,64 @@ void TcpServerManager::stopServer()
 
 void TcpServerManager::startClients()
 {
-    _is_clients_running = true;
+    if (_is_clients_running)
+    {
+        emit eventOccurred(
+            "Clients already started");
+
+        return;
+    }
 
     QJsonObject object;
     object["type"] = "Start";
 
-    broadcastMessage(object);
+    const bool success =
+        broadcastMessage(object);
+
+    if (!success)
+    {
+        emit eventOccurred(
+            "No active clients");
+    }
+
+    _is_clients_running = true;
 
     emit eventOccurred(
-        "Start command sent to all clients");
+        "Clients started");
+
+    emit clientsRunningStateChanged(
+        _is_clients_running);
 }
 
 void TcpServerManager::stopClients()
 {
-    _is_clients_running = false;
+    if (!_is_clients_running)
+    {
+        emit eventOccurred(
+            "Clients already stopped");
+
+        return;
+    }
 
     QJsonObject object;
     object["type"] = "Stop";
 
-    broadcastMessage(object);
+    const bool success =
+        broadcastMessage(object);
+
+    if (!success)
+    {
+        emit eventOccurred(
+            "No active clients");
+    }
+
+    _is_clients_running = false;
 
     emit eventOccurred(
-        "Stop command sent to all clients");
+        "Clients stopped");
+
+    emit clientsRunningStateChanged(
+        _is_clients_running);
 }
 
 void TcpServerManager::applyConfiguration(
@@ -82,7 +118,8 @@ void TcpServerManager::applyConfiguration(
     broadcastMessage(object);
 
     emit eventOccurred(
-        QString("Configuration sent: %1")
+        QString("Configuration applied. "
+                "Limit value = %1")
             .arg(limit_value));
 }
 
@@ -228,21 +265,35 @@ void TcpServerManager::sendMessage(
     }
 }
 
-void TcpServerManager::broadcastMessage(
+bool TcpServerManager::broadcastMessage(
     const QJsonObject& object)
 {
+    bool success = false;
+
     const auto data =
         protocol::Serialize(object);
 
-    for (auto it = _clients.constBegin();
-         it != _clients.constEnd(); it++)
+    for (auto it = _clients.begin();
+         it != _clients.end(); ++it)
     {
-        if (it.key()->state() ==
+        auto* socket = it.key();
+
+        if (socket->state() !=
             QAbstractSocket::ConnectedState)
         {
-            it.key()->write(data);
+            continue;
+        }
+
+        const qint64 written =
+            socket->write(data);
+
+        if (written != -1)
+        {
+            success = true;
         }
     }
+
+    return success;
 }
 
 void TcpServerManager::sendAck(

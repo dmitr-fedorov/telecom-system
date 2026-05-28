@@ -16,6 +16,9 @@ ServerController::ServerController(
     connect(_server, &TcpServerManager::eventOccurred,
             this, &ServerController::eventOccurred);
 
+    connect(_server, &TcpServerManager::clientsRunningStateChanged,
+            this, &ServerController::clientsRunningStateChanged);
+
     _server_thread.start();
 }
 
@@ -52,10 +55,11 @@ void ServerController::stopClients()
 void ServerController::applyConfiguration(
     int limit_value)
 {
-    // TcpServerManager->sendJsonConfig to clients
-
-    emit eventOccurred(
-        QString("Configuration applied. "
-                "Limit value = %1")
-            .arg(limit_value));
+    QMetaObject::invokeMethod(
+        _server,
+        [=]()
+        {
+            _server->applyConfiguration(limit_value);
+        },
+        Qt::QueuedConnection);
 }

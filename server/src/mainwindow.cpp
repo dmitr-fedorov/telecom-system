@@ -1,11 +1,16 @@
 #include "../include/mainwindow.h"
 #include "./ui_mainwindow.h"
 
+const QString MainWindow::START_TEXT = "Старт";
+const QString MainWindow::STOP_TEXT = "Стоп";
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    ui->pb_start_stop->setText(START_TEXT);
 
     connect(ui->pb_start_stop,
             &QPushButton::clicked,
@@ -21,6 +26,11 @@ MainWindow::MainWindow(QWidget *parent)
                     ui->sb_config->value());
             });
 
+    connect(&_server_controller,
+            &ServerController::clientsRunningStateChanged,
+            this,
+            &MainWindow::onClientsRunningStateChanged);
+
     connect(&_server_controller, &ServerController::eventOccurred,
             this, &MainWindow::onEventOccured);
 }
@@ -32,20 +42,24 @@ MainWindow::~MainWindow()
 
 void MainWindow::onClientsStartStopClicked()
 {
-    if (!_is_clients_sending)
+    if (ui->pb_start_stop->text() == START_TEXT)
     {
-        ui->pb_start_stop->setText("Стоп");
-
         _server_controller.startClients();
     }
     else
     {
-        ui->pb_start_stop->setText("Старт");
-
-       _server_controller.stopClients();
+        _server_controller.stopClients();
     }
 
-    _is_clients_sending = !_is_clients_sending;
+    ui->pb_start_stop->setEnabled(false);
+}
+
+void MainWindow::onClientsRunningStateChanged(bool running)
+{
+    ui->pb_start_stop->setText(
+        running ? STOP_TEXT : START_TEXT);
+
+    ui->pb_start_stop->setEnabled(true);
 }
 
 void MainWindow::onEventOccured(const QString& event)

@@ -32,6 +32,9 @@ public slots:
         int limit_value);
 
 signals:
+    void clientsRunningStateChanged(
+        bool running);
+
     void clientInfoReceived(
         const ClientInfo& info);
 

@@ -40,6 +40,9 @@ public slots:
         int limit_value);
 
 signals:
+    void clientsRunningStateChanged(
+        bool running);
+
     void clientConnected(
         const ClientInfo& info);
 
@@ -73,7 +76,7 @@ private:
         QTcpSocket* socket,
         const QJsonObject& object);
 
-    void broadcastMessage(
+    bool broadcastMessage(
         const QJsonObject& object);
 
     void sendAck(

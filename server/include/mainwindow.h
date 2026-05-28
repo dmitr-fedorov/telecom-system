@@ -19,14 +19,17 @@ public:
     ~MainWindow();
 
 private:
+    static const QString START_TEXT;
+    static const QString STOP_TEXT;
+
     Ui::MainWindow *ui;
 
     ServerController _server_controller;
 
-    bool _is_clients_sending = false;
-
 private slots:
     void onClientsStartStopClicked();
+
+    void onClientsRunningStateChanged(bool running);
 
     void onEventOccured(const QString& event);
 };
