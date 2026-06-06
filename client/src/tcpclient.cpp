@@ -1,4 +1,4 @@
-#include "../include/clientapp.h"
+#include "../include/tcpclient.h"
 
 namespace
 {
@@ -11,28 +11,28 @@ constexpr int RECONNECT_INTERVAL_MS = 5000;
 
 } // namespace
 
-ClientApp::ClientApp(QObject* parent)
+TcpClient::TcpClient(QObject* parent)
     : QObject(parent)
 {
     connect(&_socket,
             &QTcpSocket::connected,
             this,
-            &ClientApp::onConnected);
+            &TcpClient::onConnected);
 
     connect(&_socket,
             &QTcpSocket::disconnected,
             this,
-            &ClientApp::onDisconnected);
+            &TcpClient::onDisconnected);
 
     connect(&_socket,
             &QTcpSocket::readyRead,
             this,
-            &ClientApp::onReadyRead);
+            &TcpClient::onReadyRead);
 
     connect(&_socket,
             &QTcpSocket::errorOccurred,
             this,
-            &ClientApp::onErrorOccurred);
+            &TcpClient::onErrorOccurred);
 
     _reconnect_timer.setInterval(RECONNECT_INTERVAL_MS);
     _reconnect_timer.setSingleShot(true);
@@ -40,36 +40,42 @@ ClientApp::ClientApp(QObject* parent)
     connect(&_reconnect_timer,
             &QTimer::timeout,
             this,
-            &ClientApp::tryConnect);
+            &TcpClient::tryConnect);
 }
 
-void ClientApp::start()
+void TcpClient::start()
 {
     tryConnect();
 }
 
-void ClientApp::tryConnect()
+void TcpClient::sendGeneratedData(const QJsonObject& object)
 {
-    qInfo() << "Connecting to server: " << SERVER_ADDRESS << ":" << SERVER_PORT;
+
+}
+
+void TcpClient::tryConnect()
+{
+    qInfo() << "Connecting to server: "
+            << SERVER_ADDRESS << ":" << SERVER_PORT;
 
     _socket.connectToHost(SERVER_ADDRESS, SERVER_PORT);
 }
 
-void ClientApp::onConnected()
+void TcpClient::onConnected()
 {
-    qInfo() << "Connected to server: " << SERVER_ADDRESS << ":" << SERVER_PORT;
+    qInfo() << "Connected to server: "
+            << SERVER_ADDRESS << ":" << SERVER_PORT;
 }
 
-void ClientApp::onDisconnected()
+void TcpClient::onDisconnected()
 {
-    qInfo() << "Disconnected from server: " << SERVER_ADDRESS << ":" << SERVER_PORT;
-
-    _is_connection_accepted = false;
+    qInfo() << "Disconnected from server: "
+            << SERVER_ADDRESS << ":" << SERVER_PORT;
 
     scheduleReconnect();
 }
 
-void ClientApp::onReadyRead()
+void TcpClient::onReadyRead()
 {
     _read_buffer.append(_socket.readAll());
 
@@ -87,7 +93,7 @@ void ClientApp::onReadyRead()
     }
 }
 
-void ClientApp::processMessage(const QByteArray& message)
+void TcpClient::processMessage(const QByteArray& message)
 {
     QJsonObject object;
 
@@ -101,16 +107,25 @@ void ClientApp::processMessage(const QByteArray& message)
     handleJsonMessage(object);
 }
 
-void ClientApp::handleJsonMessage(const QJsonObject& object)
+void TcpClient::handleJsonMessage(const QJsonObject& object)
 {
     const QString type =
         object[protocol::kType].toString();
 
     if (type == protocol::kAck)
     {
-        _is_connection_accepted = true;
+        _client_id = object[protocol::kType].toString();
 
-        qInfo() << "Connection ACK received";
+        qInfo() << "Connection ACK received."
+                << "Assigned ID: " << _client_id;
+
+        return;
+    }
+    else if (type == protocol::kStart)
+    {
+        qInfo() << "Start command received";
+
+        emit startCommandReceived();
 
         return;
     }
@@ -118,7 +133,7 @@ void ClientApp::handleJsonMessage(const QJsonObject& object)
     qInfo() << "Unknown message type: " << type;
 }
 
-void ClientApp::onErrorOccurred(QAbstractSocket::SocketError error)
+void TcpClient::onErrorOccurred(QAbstractSocket::SocketError error)
 {
     Q_UNUSED(error);
 
@@ -127,7 +142,7 @@ void ClientApp::onErrorOccurred(QAbstractSocket::SocketError error)
     scheduleReconnect();
 }
 
-void ClientApp::scheduleReconnect()
+void TcpClient::scheduleReconnect()
 {
     if (_reconnect_timer.isActive())
     {

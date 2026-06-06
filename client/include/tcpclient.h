@@ -9,14 +9,19 @@
 
 #include "../../shared/include/protocol.h"
 
-class ClientApp : public QObject
+class TcpClient : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ClientApp(QObject* parent = nullptr);
+    explicit TcpClient(QObject* parent = nullptr);
 
     void start();
+
+    void sendGeneratedData(const QJsonObject& object);
+
+signals:
+    void startCommandReceived();
 
 private slots:
     void onConnected();
@@ -43,5 +48,5 @@ private:
 
     QTimer _reconnect_timer;
 
-    bool _is_connection_accepted = false;
+    QString _client_id;
 };

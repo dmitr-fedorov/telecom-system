@@ -13,23 +13,25 @@ find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Network)
 find_package(Qt6 REQUIRED COMPONENTS Core Network)
 
 add_executable(${PROJECT_NAME}
-  src/main.cpp
-  src/clientapp.cpp
-  src/messagefactory.cpp
-  src/datagenerator.cpp
-
-  include/clientapp.h
-  include/messagefactory.h
+  include/deviceemulator.h
+  include/tcpclient.h
+  include/datagenerationscheduler.h
   include/datagenerator.h
+
+  src/main.cpp
+  src/deviceemulator.cpp
+  src/tcpclient.cpp
+  src/datagenerationscheduler.cpp
+  src/datagenerator.cpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    OUTPUT_NAME "Server"
+    OUTPUT_NAME "Client"
 )
 
 target_link_libraries(${PROJECT_NAME}
-    Qt${QT_VERSION_MAJOR}::Core
-    Qt${QT_VERSION_MAJOR}::Network
+    Qt6::Core
+    Qt6::Network
     Shared
 )
 

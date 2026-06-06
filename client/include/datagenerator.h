@@ -1,41 +1,43 @@
 #pragma once
 
+#include <QDateTime>
+#include <QJsonArray>
 #include <QJsonObject>
-#include <QObject>
+#include <QString>
 #include <QRandomGenerator>
-#include <QTimer>
 
-#include "messagefactory.h"
+#include "../../shared/include/protocol.h"
 
-class DataGenerator : public QObject
+class DataGenerator
 {
-    Q_OBJECT
-
 public:
-    explicit DataGenerator(
-        const QString& client_id,
-        QObject* parent = nullptr);
+    static QJsonObject CreateNetworkMetrics();
 
-    void Start();
+    static QJsonObject CreateDeviceStatus();
 
-    void Stop();
-
-    bool IsActive() const;
-
-signals:
-    void DataGenerated(
-        const QJsonObject& object);
-
-private slots:
-    void GenerateData();
+    static QJsonObject CreateLogMessage();
 
 private:
-    void ScheduleNextGeneration();
+    enum class MessageSize
+    {
+        Short,
+        Medium,
+        Long
+    };
 
 private:
-    QString client_id_;
+    static QString GenerateTimestamp();
 
-    QTimer generation_timer_;
+    static MessageSize GenerateMessageSize();
 
-    bool active_ = false;
+    static QString GenerateSeverity();
+
+    static QString GenerateLogText(
+        MessageSize size);
+
+    static QJsonArray GenerateConnections();
+
+    static QJsonArray GenerateModuleStatuses();
+
+    static double RandomDouble(double min, double max);
 };
