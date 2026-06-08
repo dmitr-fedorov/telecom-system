@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QByteArray>
 #include <QJsonDocument>
 #include <QJsonParseError>
 #include <QJsonObject>
@@ -9,8 +10,6 @@ namespace protocol
 {
 
 inline constexpr auto kType = "type";
-inline constexpr auto kClientId = "client_id";
-inline constexpr auto kTimestamp = "timestamp";
 
 inline constexpr auto kAck = "Ack";
 inline constexpr auto kStart = "Start";
@@ -25,6 +24,6 @@ QByteArray Serialize(const QJsonObject& object);
 
 bool Deserialize(const QByteArray& data, QJsonObject* out_object);
 
-QJsonObject CreateAckMessage(const QString& client_id);
+QJsonObject CreateAckMessage();
 
 } // namespace protocol

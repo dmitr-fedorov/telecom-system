@@ -9,7 +9,7 @@ DataGenerationScheduler::DataGenerationScheduler(
     connect(&generation_timer_,
             &QTimer::timeout,
             this,
-            &DataGenerationScheduler::generateData);
+            &DataGenerationScheduler::generateRandomData);
 }
 
 void DataGenerationScheduler::start()
@@ -31,51 +31,17 @@ void DataGenerationScheduler::stop()
     generation_timer_.stop();
 }
 
-bool DataGenerationScheduler::isActive() const
-{
-    return active_;
-}
-
-void DataGenerationScheduler::generateData()
+void DataGenerationScheduler::generateRandomData()
 {
     if (!active_)
     {
         return;
     }
 
-    const int message_type =
-        QRandomGenerator::global()->bounded(3);
+    const auto randomData =
+        DataGenerator::GenerateRandomData();
 
-    QJsonObject object;
-
-    switch (message_type)
-    {
-    case 0:
-    {
-        object =
-            DataGenerator::CreateNetworkMetrics();
-
-        break;
-    }
-
-    case 1:
-    {
-        object =
-            DataGenerator::CreateDeviceStatus();
-
-        break;
-    }
-
-    default:
-    {
-        object =
-            DataGenerator::CreateLogMessage();
-
-        break;
-    }
-    }
-
-    emit dataGenerated(object);
+    emit dataGenerated(randomData);
 
     scheduleNextGeneration();
 }

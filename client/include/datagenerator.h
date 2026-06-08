@@ -11,11 +11,7 @@
 class DataGenerator
 {
 public:
-    static QJsonObject CreateNetworkMetrics();
-
-    static QJsonObject CreateDeviceStatus();
-
-    static QJsonObject CreateLogMessage();
+    static QJsonObject GenerateRandomData();
 
 private:
     enum class MessageSize
@@ -25,19 +21,16 @@ private:
         Long
     };
 
-private:
-    static QString GenerateTimestamp();
+    static QJsonObject GenerateNetworkMetrics();
+
+    static QJsonObject GenerateDeviceStatus();
+
+    static QJsonObject GenerateLog();
 
     static MessageSize GenerateMessageSize();
 
-    static QString GenerateSeverity();
-
     static QString GenerateLogText(
         MessageSize size);
-
-    static QJsonArray GenerateConnections();
-
-    static QJsonArray GenerateModuleStatuses();
 
     static double RandomDouble(double min, double max);
 };

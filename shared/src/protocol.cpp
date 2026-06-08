@@ -41,12 +41,11 @@ bool Deserialize(const QByteArray& data, QJsonObject* out_object)
     return true;
 }
 
-QJsonObject CreateAckMessage(const QString& client_id)
+QJsonObject CreateAckMessage()
 {
     QJsonObject object;
 
     object[kType] = kAck;
-    object[kClientId] = client_id;
     object["message"] = "Connection accepted";
 
     return object;

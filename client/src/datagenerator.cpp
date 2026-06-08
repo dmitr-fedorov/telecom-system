@@ -1,174 +1,190 @@
 #include "../include/datagenerator.h"
 
-QJsonObject DataGenerator::CreateNetworkMetrics()
+QJsonObject DataGenerator::GenerateRandomData()
+{
+    const auto message_type =
+        QRandomGenerator::global()->bounded(3);
+
+    QJsonObject result;
+
+    switch (message_type)
+    {
+        case 0:
+        {
+            result = GenerateNetworkMetrics();
+
+            break;
+        }
+
+        case 1:
+        {
+            result = GenerateDeviceStatus();
+
+            break;
+        }
+
+        default:
+        {
+            result = GenerateLog();
+
+            break;
+        }
+    }
+
+    return result;
+}
+
+QJsonObject DataGenerator::GenerateNetworkMetrics()
 {
     const MessageSize size =
         GenerateMessageSize();
 
-    QJsonObject object;
+    QJsonObject result;
 
-    object[protocol::kType] =
+    result[protocol::kType] =
         protocol::kNetworkMetrics;
 
-    object[protocol::kTimestamp] =
-        GenerateTimestamp();
-
-    object["bandwidth"] =
+    result["bandwidth"] =
         RandomDouble(10.0, 1000.0);
 
-    object["latency"] =
-        RandomDouble(1.0, 150.0);
-
-    if (size != MessageSize::Short)
+    if (size >= MessageSize::Medium)
     {
-        object["packet_loss"] =
+        result["latency"] =
+            RandomDouble(1.0, 150.0);
+
+        result["packet_loss"] =
             RandomDouble(0.0, 5.0);
 
-        object["jitter"] =
-            RandomDouble(0.0, 20.0);
-
-        object["signal_strength"] =
+        result["signal_strength"] =
             RandomDouble(40.0, 100.0);
     }
 
     if (size == MessageSize::Long)
     {
-        object["connections"] =
-            GenerateConnections();
+        result["mtu"] =
+            RandomDouble(576.0, 9000.0);
 
-        QJsonObject statistics;
+        result["rtt"] =
+            RandomDouble(10.0, 900000.0);
 
-        statistics["sent_packets"] =
+        result["link_speed"] =
+            RandomDouble(100.0, 900000.0);
+
+        result["jitter"] =
             QRandomGenerator::global()->bounded(
-                10000,
+                1,
+                30);
+
+        result["throughput"] =
+            QRandomGenerator::global()->bounded(
+                10,
+                1500);
+
+        result["sent_packets"] =
+            QRandomGenerator::global()->bounded(
+                100000,
                 500000);
 
-        statistics["received_packets"] =
+        result["received_packets"] =
             QRandomGenerator::global()->bounded(
-                10000,
+                100000,
                 500000);
 
-        statistics["errors"] =
+        result["errors"] =
             QRandomGenerator::global()->bounded(
                 0,
                 1000);
-
-        object["statistics"] =
-            statistics;
     }
 
-    return object;
+    return result;
 }
 
-QJsonObject DataGenerator::CreateDeviceStatus()
+QJsonObject DataGenerator::GenerateDeviceStatus()
 {
     const MessageSize size =
         GenerateMessageSize();
 
-    QJsonObject object;
+    QJsonObject result;
 
-    object[protocol::kType] =
+    result[protocol::kType] =
         protocol::kDeviceStatus;
 
-    object[protocol::kTimestamp] =
-        GenerateTimestamp();
-
-    object["uptime"] =
+    result["uptime"] =
         QRandomGenerator::global()->bounded(
             1000,
             1000000);
 
-    object["cpu_usage"] =
-        QRandomGenerator::global()->bounded(
-            0,
-            100);
-
-    if (size != MessageSize::Short)
+    if (size >= MessageSize::Medium)
     {
-        object["memory_usage"] =
+        result["cpu_usage"] =
             QRandomGenerator::global()->bounded(
                 0,
                 100);
 
-        object["temperature"] =
-            RandomDouble(25.0, 85.0);
-
-        object["active_tasks"] =
+        result["memory_usage"] =
             QRandomGenerator::global()->bounded(
                 0,
-                500);
+                100);
+
+        result["temperature"] =
+            RandomDouble(25.0, 100.0);
     }
 
     if (size == MessageSize::Long)
     {
-        object["modules"] =
-            GenerateModuleStatuses();
+        result["system_up_time"] =
+            RandomDouble(1.0, 10000.0);
 
-        QJsonObject system_state;
-
-        system_state["storage_available"] =
-            QRandomGenerator::global()->bounded(
-                10,
-                500);
-
-        system_state["active_processes"] =
-            QRandomGenerator::global()->bounded(
-                20,
-                300);
-
-        system_state["warnings"] =
+        result["power_supply"] =
             QRandomGenerator::global()->bounded(
                 0,
                 10);
 
-        object["system_state"] =
-            system_state;
+        result["buffer_misses"] =
+            QRandomGenerator::global()->bounded(
+                0,
+                100000);
+
+        result["active_tasks"] =
+            QRandomGenerator::global()->bounded(
+                0,
+                500);
+
+        result["storage_available"] =
+            QRandomGenerator::global()->bounded(
+                10,
+                500);
+
+        result["active_processes"] =
+            QRandomGenerator::global()->bounded(
+                20,
+                300);
+
+        result["warnings"] =
+            QRandomGenerator::global()->bounded(
+                0,
+                10);
     }
 
-    return object;
+    return result;
 }
 
-QJsonObject DataGenerator::CreateLogMessage()
+QJsonObject DataGenerator::GenerateLog()
 {
-    MessageSize size;
+    const MessageSize size =
+        GenerateMessageSize();
 
-    const int random_value =
-        QRandomGenerator::global()->bounded(100);
+    QJsonObject result;
 
-    if (random_value < 20)
-    {
-        size = MessageSize::Short;
-    }
-    else if (random_value < 50)
-    {
-        size = MessageSize::Medium;
-    }
-    else
-    {
-        size = MessageSize::Long;
-    }
-
-    QJsonObject object;
-
-    object[protocol::kType] =
+    result[protocol::kType] =
         protocol::kLog;
 
-    object[protocol::kTimestamp] =
-        GenerateTimestamp();
+    result["severity"] = "INFO";
 
-    object["severity"] =
-        GenerateSeverity();
-
-    object["message"] =
+    result["message"] =
         GenerateLogText(size);
 
-    return object;
-}
-
-QString DataGenerator::GenerateTimestamp()
-{
-    return QDateTime::currentDateTimeUtc()
-    .toString(Qt::ISODate);
+    return result;
 }
 
 DataGenerator::MessageSize
@@ -188,19 +204,6 @@ DataGenerator::GenerateMessageSize()
     }
 
     return MessageSize::Long;
-}
-
-QString DataGenerator::GenerateSeverity()
-{
-    constexpr const char* severities[] =
-        {
-            "INFO",
-            "WARNING",
-            "ERROR"
-        };
-
-    return severities[
-        QRandomGenerator::global()->bounded(3)];
 }
 
 QString DataGenerator::GenerateLogText(
@@ -231,77 +234,13 @@ QString DataGenerator::GenerateLogText(
         "recovery interval.";
 }
 
-QJsonArray DataGenerator::GenerateConnections()
+double DataGenerator::RandomDouble(double min, double max)
 {
-    QJsonArray connections;
+    const int minInt
+        = static_cast<int>(min * 100.0);
 
-    const int count =
-        QRandomGenerator::global()->bounded(2, 6);
+    const int maxInt
+        = static_cast<int>(max * 100.0);
 
-    for (int i = 0; i < count; ++i)
-    {
-        QJsonObject connection;
-
-        connection["address"] =
-            QString("192.168.1.%1")
-                .arg(i + 1);
-
-        connection["latency"] =
-            RandomDouble(1.0, 100.0);
-
-        connection["status"] =
-            QRandomGenerator::global()->bounded(2)
-                ? "active"
-                : "inactive";
-
-        connections.append(connection);
-    }
-
-    return connections;
-}
-
-QJsonArray DataGenerator::GenerateModuleStatuses()
-{
-    constexpr const char* module_names[] =
-        {
-            "Network",
-            "Storage",
-            "Security",
-            "Monitoring",
-            "Database"
-        };
-
-    constexpr const char* statuses[] =
-        {
-            "OK",
-            "WARNING",
-            "ERROR"
-        };
-
-    QJsonArray modules;
-
-    for (const auto* module_name : module_names)
-    {
-        QJsonObject module;
-
-        module["name"] =
-            module_name;
-
-        module["status"] =
-            statuses[
-                QRandomGenerator::global()->bounded(3)];
-
-        modules.append(module);
-    }
-
-    return modules;
-}
-
-double DataGenerator::RandomDouble(
-    double min,
-    double max)
-{
-    return min +
-           (max - min) *
-               QRandomGenerator::global()->generateDouble();
+    return QRandomGenerator::global()->bounded(minInt, maxInt) / 100.0;
 }

@@ -11,7 +11,7 @@ DeviceEmulator::DeviceEmulator(QObject* parent)
             _genScheduler, &DataGenerationScheduler::start);
 
     connect(_genScheduler, &DataGenerationScheduler::dataGenerated,
-            _tcpClient, &TcpClient::sendGeneratedData);
+            _tcpClient, &TcpClient::sendData);
 }
 
 void DeviceEmulator::start()

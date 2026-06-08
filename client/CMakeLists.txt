@@ -23,6 +23,7 @@ add_executable(${PROJECT_NAME}
   src/tcpclient.cpp
   src/datagenerationscheduler.cpp
   src/datagenerator.cpp
+
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

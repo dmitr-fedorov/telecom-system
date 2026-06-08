@@ -19,20 +19,17 @@ public:
 
     void stop();
 
-    bool isActive() const;
-
 signals:
     void dataGenerated(
         const QJsonObject& object);
-
-private slots:
-    void generateData();
-
-private:
-    void scheduleNextGeneration();
 
 private:
     QTimer generation_timer_;
 
     bool active_ = false;
+
+    void scheduleNextGeneration();
+
+private slots:
+    void generateRandomData();
 };

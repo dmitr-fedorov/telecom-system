@@ -18,7 +18,7 @@ public:
 
     void start();
 
-    void sendGeneratedData(const QJsonObject& object);
+    void sendData(const QJsonObject& object);
 
 signals:
     void startCommandReceived();
@@ -47,6 +47,4 @@ private:
     QByteArray _read_buffer;
 
     QTimer _reconnect_timer;
-
-    QString _client_id;
 };

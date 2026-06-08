@@ -157,7 +157,7 @@ void TcpServerManager::onNewConnection()
 
         emit clientConnected(info);
 
-        sendAck(socket, client_id);
+        sendAck(socket);
 
         if (_is_clients_running)
         {
@@ -296,13 +296,10 @@ bool TcpServerManager::broadcastMessage(
     return success;
 }
 
-void TcpServerManager::sendAck(
-    QTcpSocket* socket,
-    const QString& client_id)
+void TcpServerManager::sendAck(QTcpSocket* socket)
 {
     const QJsonObject object =
-        protocol::CreateAckMessage(
-            client_id);
+        protocol::CreateAckMessage();
 
     sendMessage(socket, object);
 }

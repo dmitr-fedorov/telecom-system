@@ -79,9 +79,7 @@ private:
     bool broadcastMessage(
         const QJsonObject& object);
 
-    void sendAck(
-        QTcpSocket* socket,
-        const QString& client_id);
+    void sendAck(QTcpSocket* socket);
 
 private slots:
     void onNewConnection();

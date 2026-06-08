@@ -48,9 +48,17 @@ void TcpClient::start()
     tryConnect();
 }
 
-void TcpClient::sendGeneratedData(const QJsonObject& object)
+void TcpClient::sendData(const QJsonObject& object)
 {
+    if (_socket.state() != QAbstractSocket::ConnectedState)
+    {
+        return;
+    }
 
+    auto data =
+        protocol::Serialize(object);
+
+    _socket.write(data);
 }
 
 void TcpClient::tryConnect()
@@ -114,10 +122,7 @@ void TcpClient::handleJsonMessage(const QJsonObject& object)
 
     if (type == protocol::kAck)
     {
-        _client_id = object[protocol::kType].toString();
-
-        qInfo() << "Connection ACK received."
-                << "Assigned ID: " << _client_id;
+        qInfo() << "Connection ACK received";
 
         return;
     }
