@@ -41,14 +41,4 @@ bool Deserialize(const QByteArray& data, QJsonObject* out_object)
     return true;
 }
 
-QJsonObject CreateAckMessage()
-{
-    QJsonObject object;
-
-    object[kType] = kAck;
-    object["message"] = "Connection accepted";
-
-    return object;
-}
-
 } // namespace protocol

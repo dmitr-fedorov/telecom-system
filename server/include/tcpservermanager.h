@@ -11,14 +11,6 @@
 
 #include "../../shared/include/protocol.h"
 
-struct ClientInfo
-{
-    QString client_id;
-    QString ip_address;
-    quint16 port = 0;
-    QString status;
-};
-
 class TcpServerManager : public QObject
 {
     Q_OBJECT
@@ -43,11 +35,10 @@ signals:
     void clientsRunningStateChanged(
         bool running);
 
-    void clientConnected(
-        const ClientInfo& info);
-
-    void clientDisconnected(
-        const QString& client_id);
+    void clientConnectionStateChanged(
+        const QString& client_id,
+        const QString& ip_address,
+        const QString& state);
 
     void eventOccurred(
         const QString& event);

@@ -26,6 +26,11 @@ MainWindow::MainWindow(QWidget *parent)
             });
 
     connect(&_server_controller,
+            &ServerController::clientConnectionStateChanged,
+            this,
+            &MainWindow::onClientConnectionStateChanged);
+
+    connect(&_server_controller,
             &ServerController::clientsRunningStateChanged,
             this,
             &MainWindow::onClientsRunningStateChanged);
@@ -40,6 +45,46 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::onClientConnectionStateChanged(
+    const QString& client_id,
+    const QString& ip_address,
+    const QString& state)
+{
+    auto it = _clientRows.find(client_id);
+
+    if (it != _clientRows.end())
+    {
+        const int row = *it;
+
+        ui->tw_clients_info->item(row, 2)
+            ->setText(state);
+    }
+
+    const int row =
+        ui->tw_clients_info->rowCount();
+
+    ui->tw_clients_info->insertRow(row);
+
+    ui->tw_clients_info->setItem(
+        row,
+        0,
+        new QTableWidgetItem(client_id));
+
+    ui->tw_clients_info->setItem(
+        row,
+        1,
+        new QTableWidgetItem(ip_address));
+
+    ui->tw_clients_info->setItem(
+        row,
+        2,
+        new QTableWidgetItem(state));
+
+    _clientRows.insert(
+        client_id,
+        row);
 }
 
 void MainWindow::onClientsStartStopClicked()

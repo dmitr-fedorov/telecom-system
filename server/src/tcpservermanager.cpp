@@ -60,7 +60,7 @@ void TcpServerManager::startClients()
     }
 
     QJsonObject object;
-    object["type"] = "Start";
+    object[protocol::kType] = "Start";
 
     const bool success =
         broadcastMessage(object);
@@ -91,7 +91,7 @@ void TcpServerManager::stopClients()
     }
 
     QJsonObject object;
-    object["type"] = "Stop";
+    object[protocol::kType] = "Stop";
 
     const bool success =
         broadcastMessage(object);
@@ -115,7 +115,7 @@ void TcpServerManager::applyConfiguration(
     int limit_value)
 {
     QJsonObject object;
-    object["type"] = "Config";
+    object[protocol::kType] = "Config";
     object["limit"] = limit_value;
 
     broadcastMessage(object);
@@ -151,21 +151,16 @@ void TcpServerManager::onNewConnection()
                 this,
                 &TcpServerManager::onClientDisconnected);
 
-        ClientInfo info;
-        info.client_id = client_id;
-        info.ip_address =
-            socket->peerAddress().toString();
-        info.port = socket->peerPort();
-        info.status = "Connected";
-
-        emit clientConnected(info);
+        emit clientConnectionStateChanged(client_id,
+                                socket->peerAddress().toString(),
+                                "Connected");
 
         sendAck(socket);
 
         if (_is_clients_running)
         {
             QJsonObject object;
-            object["type"] = "Start";
+            object[protocol::kType] = "Start";
 
             sendMessage(socket, object);
         }
@@ -189,7 +184,9 @@ void TcpServerManager::onClientDisconnected()
         return;
     }
 
-    emit clientDisconnected(it->client_id);
+    emit clientConnectionStateChanged(it->client_id,
+                            socket->peerAddress().toString(),
+                            "Disconnected");
 
     emit eventOccurred(
         QString("Client disconnected: %1")
@@ -296,8 +293,10 @@ bool TcpServerManager::broadcastMessage(
 
 void TcpServerManager::sendAck(QTcpSocket* socket)
 {
-    const QJsonObject object =
-        protocol::CreateAckMessage();
+    QJsonObject object;
+
+    object[protocol::kType] = protocol::kAck;
+    object["message"] = "Connection accepted";
 
     sendMessage(socket, object);
 }

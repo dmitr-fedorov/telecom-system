@@ -13,6 +13,9 @@ ServerController::ServerController(
     connect(&_server_thread, &QThread::finished,
             _server, &QObject::deleteLater);
 
+    connect(_server, &TcpServerManager::clientConnectionStateChanged,
+            this, &ServerController::clientConnectionStateChanged);
+
     connect(_server, &TcpServerManager::eventOccurred,
             this, &ServerController::eventOccurred);
 

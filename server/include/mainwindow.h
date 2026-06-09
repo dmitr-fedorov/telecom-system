@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDateTime>
+#include <QHash>
 #include <QMainWindow>
 
 #include "../include/servercontroller.h"
@@ -27,7 +28,14 @@ private:
 
     ServerController _server_controller;
 
+    QHash<QString, int> _clientRows;
+
 private slots:
+    void onClientConnectionStateChanged(
+        const QString& client_id,
+        const QString& ip_address,
+        const QString& state);
+
     void onClientsStartStopClicked();
 
     void onClientsRunningStateChanged(bool running);

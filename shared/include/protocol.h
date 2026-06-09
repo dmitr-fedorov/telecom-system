@@ -24,6 +24,4 @@ QByteArray Serialize(const QJsonObject& object);
 
 bool Deserialize(const QByteArray& data, QJsonObject* out_object);
 
-QJsonObject CreateAckMessage();
-
 } // namespace protocol

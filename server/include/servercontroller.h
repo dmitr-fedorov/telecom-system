@@ -6,14 +6,6 @@
 
 #include "../include/tcpservermanager.h"
 
-struct ClientData
-{
-    QString client_id;
-    QString type;
-    QString content;
-    QString timestamp;
-};
-
 class ServerController : public QObject
 {
     Q_OBJECT
@@ -33,11 +25,13 @@ public slots:
         int limit_value);
 
 signals:
+    void clientConnectionStateChanged(
+        const QString& client_id,
+        const QString& ip_address,
+        const QString& state);
+
     void clientsRunningStateChanged(
         bool running);
-
-    void clientInfoReceived(
-        const ClientInfo& info);
 
     void eventOccurred(
         const QString& event);

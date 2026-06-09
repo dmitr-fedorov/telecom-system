@@ -83,7 +83,23 @@
        </widget>
       </item>
       <item>
-       <widget class="QTableWidget" name="tw_clients_info"/>
+       <widget class="QTableWidget" name="tw_clients_info">
+        <column>
+         <property name="text">
+          <string>ID Клиента</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>IP-Адрес</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Статус</string>
+         </property>
+        </column>
+       </widget>
       </item>
      </layout>
     </item>
