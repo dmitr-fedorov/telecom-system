@@ -13,6 +13,7 @@ inline constexpr auto kType = "type";
 
 inline constexpr auto kAck = "Ack";
 inline constexpr auto kStart = "Start";
+inline constexpr auto kStop = "Stop";
 
 inline constexpr auto kNetworkMetrics = "NetworkMetrics";
 inline constexpr auto kDeviceStatus = "DeviceStatus";

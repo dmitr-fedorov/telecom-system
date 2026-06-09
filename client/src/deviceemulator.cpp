@@ -10,6 +10,9 @@ DeviceEmulator::DeviceEmulator(QObject* parent)
     connect(_tcpClient, &TcpClient::startCommandReceived,
             _genScheduler, &DataGenerationScheduler::start);
 
+    connect(_tcpClient, &TcpClient::stopCommandReceived,
+            _genScheduler, &DataGenerationScheduler::stop);
+
     connect(_genScheduler, &DataGenerationScheduler::dataGenerated,
             _tcpClient, &TcpClient::sendData);
 }

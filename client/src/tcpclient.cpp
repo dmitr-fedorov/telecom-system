@@ -134,6 +134,14 @@ void TcpClient::handleJsonMessage(const QJsonObject& object)
 
         return;
     }
+    else if (type == protocol::kStop)
+    {
+        qInfo() << "Stop command received";
+
+        emit stopCommandReceived();
+
+        return;
+    }
 
     qInfo() << "Unknown message type: " << type;
 }

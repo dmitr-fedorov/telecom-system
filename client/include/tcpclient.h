@@ -23,6 +23,8 @@ public:
 signals:
     void startCommandReceived();
 
+    void stopCommandReceived();
+
 private slots:
     void onConnected();
 
@@ -35,16 +37,15 @@ private slots:
     void tryConnect();
 
 private:
-    void processMessage(const QByteArray& message);
-
-    void handleJsonMessage(const QJsonObject& object);
-
-    void scheduleReconnect();
-
-private:
     QTcpSocket _socket;
 
     QByteArray _read_buffer;
 
     QTimer _reconnect_timer;
+
+    void processMessage(const QByteArray& message);
+
+    void handleJsonMessage(const QJsonObject& object);
+
+    void scheduleReconnect();
 };
