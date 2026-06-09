@@ -1,12 +1,12 @@
 #pragma once
 
+#include <QDateTime>
 #include <QHash>
 #include <QHostAddress>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTcpServer>
 #include <QTcpSocket>
-#include <QRandomGenerator>
 #include <QObject>
 
 #include "../../shared/include/protocol.h"
@@ -52,6 +52,12 @@ signals:
     void eventOccurred(
         const QString& event);
 
+    void clientDataReceived(
+        const QString& clientId,
+        const QString& type,
+        const QString& content,
+        const QDateTime& timestamp);
+
 private:
     struct ClientContext
     {
@@ -80,6 +86,14 @@ private:
         const QJsonObject& object);
 
     void sendAck(QTcpSocket* socket);
+
+    void processMessage(
+        const QString& clientId,
+        const QByteArray& message);
+
+    void processLogMessage(
+        const QString& clientId,
+        const QJsonObject& object);
 
 private slots:
     void onNewConnection();

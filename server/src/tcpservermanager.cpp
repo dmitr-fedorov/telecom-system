@@ -34,8 +34,11 @@ void TcpServerManager::stopServer()
         _server->close();
     }
 
-    for (auto* socket : _clients.keys())
+    for (auto it = _clients.begin();
+         it != _clients.end(); ++it)
     {
+        auto* socket = it.key();
+
         socket->disconnectFromHost();
         socket->disconnect(this);
         socket->deleteLater();
@@ -127,10 +130,10 @@ void TcpServerManager::onNewConnection()
 {
     while (_server->hasPendingConnections())
     {
-        QTcpSocket* socket =
+        auto* socket =
             _server->nextPendingConnection();
 
-        const QString client_id =
+        const auto client_id =
             getNewClientId();
 
         ClientContext context;
@@ -215,14 +218,14 @@ void TcpServerManager::onReadyRead()
         return;
     }
 
-    auto& clientBuffer = (*it).buffer;
+    auto& buffer = it->buffer;
 
-    clientBuffer.append(socket->readAll());
+    buffer.append(socket->readAll());
 
     while (true)
     {
         const int delimiter_index =
-            clientBuffer.indexOf(
+            buffer.indexOf(
             protocol::TCP_PACKET_DELIMETER);
 
         if (delimiter_index == -1)
@@ -231,18 +234,13 @@ void TcpServerManager::onReadyRead()
         }
 
         const auto message =
-            clientBuffer.left(
-                delimiter_index);
+            buffer.left(delimiter_index);
 
-        clientBuffer.remove(
+        buffer.remove(
             0,
             delimiter_index + 1);
 
-        emit eventOccurred(
-            QString("Data received from %1")
-                .arg((*it).client_id));
-
-        // parse JSON, update table
+        processMessage(it->client_id, message);
     }
 }
 
@@ -284,7 +282,7 @@ bool TcpServerManager::broadcastMessage(
             continue;
         }
 
-        const qint64 written =
+        const auto written =
             socket->write(data);
 
         if (written != -1)
@@ -302,4 +300,35 @@ void TcpServerManager::sendAck(QTcpSocket* socket)
         protocol::CreateAckMessage();
 
     sendMessage(socket, object);
+}
+
+void TcpServerManager::processMessage(
+    const QString& clientId,
+    const QByteArray& message)
+{
+    QJsonObject object;
+
+    if (!protocol::Deserialize(
+            message,
+            &object))
+    {
+        emit eventOccurred(
+            "Failed to parse JSON message");
+
+        return;
+    }
+
+    const auto type =
+        object.take(protocol::kType).toString();
+
+    const auto content =
+        QString::fromUtf8(
+            QJsonDocument(object)
+                .toJson(QJsonDocument::Compact));
+
+    emit clientDataReceived(
+        clientId,
+        type,
+        content,
+        QDateTime::currentDateTime());
 }

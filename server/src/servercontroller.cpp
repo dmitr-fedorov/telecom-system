@@ -19,6 +19,9 @@ ServerController::ServerController(
     connect(_server, &TcpServerManager::clientsRunningStateChanged,
             this, &ServerController::clientsRunningStateChanged);
 
+    connect(_server, &TcpServerManager::clientDataReceived,
+            this, &ServerController::clientDataReceived);
+
     _server_thread.start();
 }
 

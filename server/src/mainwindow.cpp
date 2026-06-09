@@ -22,8 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
             this,
             [this]()
             {
-                _server_controller.applyConfiguration(
-                    ui->sb_config->value());
+                _server_controller.applyConfiguration(0);
             });
 
     connect(&_server_controller,
@@ -33,6 +32,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(&_server_controller, &ServerController::eventOccurred,
             this, &MainWindow::onEventOccured);
+
+    connect(&_server_controller, &ServerController::clientDataReceived,
+            this, &MainWindow::onClientDataReceived);
 }
 
 MainWindow::~MainWindow()
@@ -65,4 +67,37 @@ void MainWindow::onClientsRunningStateChanged(bool running)
 void MainWindow::onEventOccured(const QString& event)
 {
     ui->te_events->append(event);
+}
+
+void MainWindow::onClientDataReceived(
+    const QString& clientId,
+    const QString& type,
+    const QString& content,
+    const QDateTime& timestamp)
+{
+    const int row =
+        ui->tw_clients_data->rowCount();
+
+    ui->tw_clients_data->insertRow(row);
+
+    ui->tw_clients_data->setItem(
+        row,
+        0,
+        new QTableWidgetItem(clientId));
+
+    ui->tw_clients_data->setItem(
+        row,
+        1,
+        new QTableWidgetItem(type));
+
+    ui->tw_clients_data->setItem(
+        row,
+        2,
+        new QTableWidgetItem(content));
+
+    ui->tw_clients_data->setItem(
+        row,
+        3,
+        new QTableWidgetItem(
+            timestamp.toString("HH:mm:ss")));
 }

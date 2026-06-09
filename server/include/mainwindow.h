@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QDateTime>
 #include <QMainWindow>
 
 #include "../include/servercontroller.h"
@@ -32,4 +33,10 @@ private slots:
     void onClientsRunningStateChanged(bool running);
 
     void onEventOccured(const QString& event);
+
+    void onClientDataReceived(
+        const QString& clientId,
+        const QString& type,
+        const QString& content,
+        const QDateTime& timestamp);
 };

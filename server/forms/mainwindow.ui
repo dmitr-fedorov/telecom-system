@@ -14,9 +14,9 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,6,10,5">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,5,10,10">
     <property name="spacing">
-     <number>8</number>
+     <number>0</number>
     </property>
     <property name="leftMargin">
      <number>2</number>
@@ -31,7 +31,7 @@
      <number>2</number>
     </property>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QHBoxLayout" name="hl_buttons">
       <item>
        <widget class="QPushButton" name="pb_start_stop">
         <property name="sizePolicy">
@@ -59,32 +59,82 @@
        </spacer>
       </item>
       <item>
-       <widget class="QLabel" name="lb_config">
-        <property name="text">
-         <string>Максимальное значение:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QSpinBox" name="sb_config"/>
-      </item>
-      <item>
        <widget class="QPushButton" name="pb_config">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
-         <string>Применить</string>
+         <string>Конфигурация</string>
         </property>
        </widget>
       </item>
      </layout>
     </item>
     <item>
-     <widget class="QTableWidget" name="tw_clients_info"/>
+     <layout class="QVBoxLayout" name="vl_clients_info">
+      <item>
+       <widget class="QLabel" name="lb_clients_info">
+        <property name="text">
+         <string>Информация о клиентах:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tw_clients_info"/>
+      </item>
+     </layout>
     </item>
     <item>
-     <widget class="QTableWidget" name="tw_clients_data"/>
+     <layout class="QVBoxLayout" name="vl_clients_data">
+      <item>
+       <widget class="QLabel" name="lb_clients_data">
+        <property name="text">
+         <string>Данные клиентов:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tw_clients_data">
+        <column>
+         <property name="text">
+          <string>ID Клиента</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Тип Данных</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Содержимое Данных</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Время Получения</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
-     <widget class="QTextEdit" name="te_events"/>
+     <layout class="QVBoxLayout" name="vl_events">
+      <item>
+       <widget class="QLabel" name="lb_events">
+        <property name="text">
+         <string>События:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTextEdit" name="te_events"/>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

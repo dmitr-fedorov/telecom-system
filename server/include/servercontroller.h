@@ -26,6 +26,7 @@ public:
 
 public slots:
     void startClients();
+
     void stopClients();
 
     void applyConfiguration(
@@ -38,13 +39,17 @@ signals:
     void clientInfoReceived(
         const ClientInfo& info);
 
-    void clientDataReceived(
-        const ClientData& data);
-
     void eventOccurred(
         const QString& event);
 
+    void clientDataReceived(
+        const QString& clientId,
+        const QString& type,
+        const QString& content,
+        const QDateTime& timestamp);
+
 private:
     QThread _server_thread;
+
     TcpServerManager* _server = nullptr;
 };
