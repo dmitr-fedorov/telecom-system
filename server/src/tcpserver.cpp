@@ -1,33 +1,33 @@
-#include "../include/tcpservermanager.h"
+#include "../include/tcpserver.h"
 
-TcpServerManager::TcpServerManager(
+TcpServer::TcpServer(
     QObject* parent)
     : QObject(parent)
 {
 }
 
-void TcpServerManager::startServer()
+void TcpServer::startServer()
 {
     _server = new QTcpServer(this);
 
     connect(_server,
             &QTcpServer::newConnection,
             this,
-            &TcpServerManager::onNewConnection);
+            &TcpServer::onNewConnection);
 
     if (!_server->listen(QHostAddress::Any, _SERVER_PORT))
     {
         emit eventOccurred(
-            QString("Failed to start server: %1")
+            QString("Ошибка: Не удалось запустить сервер: %1")
                 .arg(_server->errorString()));
     }
 
     emit eventOccurred(
-        QString("Server started on port %1")
+        QString("Сервер запущен на порте %1")
             .arg(_SERVER_PORT));
 }
 
-void TcpServerManager::stopServer()
+void TcpServer::stopServer()
 {
     if (_server != nullptr)
     {
@@ -46,15 +46,15 @@ void TcpServerManager::stopServer()
 
     _clients.clear();
 
-    emit eventOccurred("Server stopped");
+    emit eventOccurred("Сервер остановлен");
 }
 
-void TcpServerManager::startClients()
+void TcpServer::startClients()
 {
     if (_is_clients_running)
     {
         emit eventOccurred(
-            "Clients already started");
+            "Ошибка: Передача данных клиентами уже начата");
 
         return;
     }
@@ -68,24 +68,24 @@ void TcpServerManager::startClients()
     if (!success)
     {
         emit eventOccurred(
-            "No active clients");
+            "Нет подключенных клиентов");
     }
 
     _is_clients_running = true;
 
     emit eventOccurred(
-        "Clients started");
+        "Начата передача данных клиентами");
 
     emit clientsRunningStateChanged(
         _is_clients_running);
 }
 
-void TcpServerManager::stopClients()
+void TcpServer::stopClients()
 {
     if (!_is_clients_running)
     {
         emit eventOccurred(
-            "Clients already stopped");
+            "Ошибка: Передача данных клиентами уже остановлена");
 
         return;
     }
@@ -99,34 +99,41 @@ void TcpServerManager::stopClients()
     if (!success)
     {
         emit eventOccurred(
-            "No active clients");
+            "Нет подключенных клиентов");
     }
 
     _is_clients_running = false;
 
     emit eventOccurred(
-        "Clients stopped");
+        "Передача данных клиентами остановлена");
 
     emit clientsRunningStateChanged(
         _is_clients_running);
 }
 
-void TcpServerManager::applyConfiguration(
+void TcpServer::applyConfiguration(
     int limit_value)
 {
     QJsonObject object;
     object[protocol::kType] = "Config";
     object["limit"] = limit_value;
 
-    broadcastMessage(object);
+    const bool success =
+        broadcastMessage(object);
+
+    if (!success)
+    {
+        emit eventOccurred(
+            "Нет подключенных клиентов");
+
+        return;
+    }
 
     emit eventOccurred(
-        QString("Configuration applied. "
-                "Limit value = %1")
-            .arg(limit_value));
+        "Конфигурация лимитов отправлена клиентам");
 }
 
-void TcpServerManager::onNewConnection()
+void TcpServer::onNewConnection()
 {
     while (_server->hasPendingConnections())
     {
@@ -144,16 +151,20 @@ void TcpServerManager::onNewConnection()
         connect(socket,
                 &QTcpSocket::readyRead,
                 this,
-                &TcpServerManager::onReadyRead);
+                &TcpServer::onReadyRead);
 
         connect(socket,
                 &QTcpSocket::disconnected,
                 this,
-                &TcpServerManager::onClientDisconnected);
+                &TcpServer::onClientDisconnected);
 
         emit clientConnectionStateChanged(client_id,
                                 socket->peerAddress().toString(),
-                                "Connected");
+                                "Подключен");
+
+        emit eventOccurred(
+            QString("Клиент подключился: %1")
+                .arg(client_id));
 
         sendAck(socket);
 
@@ -167,7 +178,7 @@ void TcpServerManager::onNewConnection()
     }
 }
 
-void TcpServerManager::onClientDisconnected()
+void TcpServer::onClientDisconnected()
 {
     auto* socket =
         qobject_cast<QTcpSocket*>(sender());
@@ -186,10 +197,10 @@ void TcpServerManager::onClientDisconnected()
 
     emit clientConnectionStateChanged(it->client_id,
                             socket->peerAddress().toString(),
-                            "Disconnected");
+                            "Отключен");
 
     emit eventOccurred(
-        QString("Client disconnected: %1")
+        QString("Клиент отключился: %1")
             .arg(it->client_id));
 
     _clients.remove(socket);
@@ -198,7 +209,7 @@ void TcpServerManager::onClientDisconnected()
     socket->deleteLater();
 }
 
-void TcpServerManager::onReadyRead()
+void TcpServer::onReadyRead()
 {
     auto* socket =
         qobject_cast<QTcpSocket*>(sender());
@@ -241,13 +252,13 @@ void TcpServerManager::onReadyRead()
     }
 }
 
-QString TcpServerManager::getNewClientId()
+QString TcpServer::getNewClientId()
 {
     return QString("client_%1")
     .arg(++_id_counter);
 }
 
-void TcpServerManager::sendMessage(
+void TcpServer::sendMessage(
     QTcpSocket* socket,
     const QJsonObject& object)
 {
@@ -260,7 +271,7 @@ void TcpServerManager::sendMessage(
     }
 }
 
-bool TcpServerManager::broadcastMessage(
+bool TcpServer::broadcastMessage(
     const QJsonObject& object)
 {
     bool success = false;
@@ -291,17 +302,16 @@ bool TcpServerManager::broadcastMessage(
     return success;
 }
 
-void TcpServerManager::sendAck(QTcpSocket* socket)
+void TcpServer::sendAck(QTcpSocket* socket)
 {
     QJsonObject object;
 
     object[protocol::kType] = protocol::kAck;
-    object["message"] = "Connection accepted";
 
     sendMessage(socket, object);
 }
 
-void TcpServerManager::processMessage(
+void TcpServer::processMessage(
     const QString& clientId,
     const QByteArray& message)
 {
@@ -312,7 +322,9 @@ void TcpServerManager::processMessage(
             &object))
     {
         emit eventOccurred(
-            "Failed to parse JSON message");
+            QString(
+                "Ошибка: не удалось разобрать "
+                "JSON сообщение от клиента: ").arg(clientId));
 
         return;
     }

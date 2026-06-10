@@ -4,7 +4,7 @@
 #include <QHash>
 #include <QMainWindow>
 
-#include "../include/servercontroller.h"
+#include "../include/tcpservercontroller.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -26,7 +26,7 @@ private:
 
     Ui::MainWindow *ui;
 
-    ServerController _server_controller;
+    TcpServerController _server_controller;
 
     QHash<QString, int> _clientRows;
 

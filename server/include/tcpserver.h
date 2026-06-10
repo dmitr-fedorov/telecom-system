@@ -11,12 +11,12 @@
 
 #include "../../shared/include/protocol.h"
 
-class TcpServerManager : public QObject
+class TcpServer : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit TcpServerManager(
+    explicit TcpServer(
         QObject* parent = nullptr);
 
 public slots:

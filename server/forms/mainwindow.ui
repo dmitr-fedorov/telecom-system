@@ -14,9 +14,9 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,5,10,10">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,5,10,7">
     <property name="spacing">
-     <number>0</number>
+     <number>2</number>
     </property>
     <property name="leftMargin">
      <number>2</number>
@@ -40,8 +40,14 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Старт</string>
+         <string>Начать передачу</string>
         </property>
        </widget>
       </item>
@@ -59,15 +65,21 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="pb_config">
+       <widget class="QPushButton" name="pb_config_limits">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="minimumSize">
+         <size>
+          <width>150</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Конфигурация</string>
+         <string>Конфигурация лимитов</string>
         </property>
        </widget>
       </item>

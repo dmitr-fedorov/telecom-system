@@ -4,17 +4,17 @@
 #include <QObject>
 #include <QThread>
 
-#include "../include/tcpservermanager.h"
+#include "../include/tcpserver.h"
 
-class ServerController : public QObject
+class TcpServerController : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ServerController(
+    explicit TcpServerController(
         QObject* parent = nullptr);
 
-    ~ServerController();
+    ~TcpServerController();
 
 public slots:
     void startClients();
@@ -45,5 +45,5 @@ signals:
 private:
     QThread _server_thread;
 
-    TcpServerManager* _server = nullptr;
+    TcpServer* _server = nullptr;
 };

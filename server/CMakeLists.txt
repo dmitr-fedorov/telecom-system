@@ -17,12 +17,12 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS
 
 add_executable(${PROJECT_NAME}
     include/mainwindow.h
-    include/servercontroller.h
-    include/tcpservermanager.h
+    include/tcpservercontroller.h
+    include/tcpserver.h
 
     src/mainwindow.cpp
-    src/servercontroller.cpp
-    src/tcpservermanager.cpp
+    src/tcpservercontroller.cpp
+    src/tcpserver.cpp
     src/main.cpp
 
     forms/mainwindow.ui

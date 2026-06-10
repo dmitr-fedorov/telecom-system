@@ -1,8 +1,8 @@
 #include "../include/mainwindow.h"
 #include "./ui_mainwindow.h"
 
-const QString MainWindow::START_TEXT = "Старт";
-const QString MainWindow::STOP_TEXT = "Стоп";
+const QString MainWindow::START_TEXT = "Начать передачу";
+const QString MainWindow::STOP_TEXT = "Остановить передачу";
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
             this,
             &MainWindow::onClientsStartStopClicked);
 
-    connect(ui->pb_config,
+    connect(ui->pb_config_limits,
             &QPushButton::clicked,
             this,
             [this]()
@@ -26,19 +26,19 @@ MainWindow::MainWindow(QWidget *parent)
             });
 
     connect(&_server_controller,
-            &ServerController::clientConnectionStateChanged,
+            &TcpServerController::clientConnectionStateChanged,
             this,
             &MainWindow::onClientConnectionStateChanged);
 
     connect(&_server_controller,
-            &ServerController::clientsRunningStateChanged,
+            &TcpServerController::clientsRunningStateChanged,
             this,
             &MainWindow::onClientsRunningStateChanged);
 
-    connect(&_server_controller, &ServerController::eventOccurred,
+    connect(&_server_controller, &TcpServerController::eventOccurred,
             this, &MainWindow::onEventOccured);
 
-    connect(&_server_controller, &ServerController::clientDataReceived,
+    connect(&_server_controller, &TcpServerController::clientDataReceived,
             this, &MainWindow::onClientDataReceived);
 }
 
