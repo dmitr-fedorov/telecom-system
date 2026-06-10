@@ -69,14 +69,16 @@ private:
 
     QString getNewClientId();
 
-    void sendMessage(
+    bool sendMessage(
         QTcpSocket* socket,
         const QJsonObject& object);
 
     bool broadcastMessage(
         const QJsonObject& object);
 
-    void sendAck(QTcpSocket* socket);
+    void sendAck(
+        QTcpSocket* socket,
+        const QString& clientId);
 
     void processMessage(
         const QString& clientId,
@@ -92,4 +94,7 @@ private slots:
     void onClientDisconnected();
 
     void onReadyRead();
+
+    void onSocketError(
+        QAbstractSocket::SocketError);
 };

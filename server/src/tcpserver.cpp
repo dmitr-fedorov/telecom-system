@@ -8,6 +8,11 @@ TcpServer::TcpServer(
 
 void TcpServer::startServer()
 {
+    if (_server != nullptr)
+    {
+        return;
+    }
+
     _server = new QTcpServer(this);
 
     connect(_server,
@@ -20,6 +25,11 @@ void TcpServer::startServer()
         emit eventOccurred(
             QString("Ошибка: Не удалось запустить сервер: %1")
                 .arg(_server->errorString()));
+
+        delete _server;
+        _server = nullptr;
+
+        return;
     }
 
     emit eventOccurred(
@@ -32,6 +42,8 @@ void TcpServer::stopServer()
     if (_server != nullptr)
     {
         _server->close();
+        _server->deleteLater();
+        _server = nullptr;
     }
 
     for (auto it = _clients.begin();
@@ -45,6 +57,10 @@ void TcpServer::stopServer()
     }
 
     _clients.clear();
+
+    _is_clients_running = false;
+
+    _id_counter = 0;
 
     emit eventOccurred("Сервер остановлен");
 }
@@ -62,19 +78,12 @@ void TcpServer::startClients()
     QJsonObject object;
     object[protocol::kType] = "Start";
 
-    const bool success =
-        broadcastMessage(object);
-
-    if (!success)
-    {
-        emit eventOccurred(
-            "Нет подключенных клиентов");
-    }
+    broadcastMessage(object);
 
     _is_clients_running = true;
 
     emit eventOccurred(
-        "Начата передача данных клиентами");
+        "Передача данных клиентами активна");
 
     emit clientsRunningStateChanged(
         _is_clients_running);
@@ -93,14 +102,7 @@ void TcpServer::stopClients()
     QJsonObject object;
     object[protocol::kType] = "Stop";
 
-    const bool success =
-        broadcastMessage(object);
-
-    if (!success)
-    {
-        emit eventOccurred(
-            "Нет подключенных клиентов");
-    }
+    broadcastMessage(object);
 
     _is_clients_running = false;
 
@@ -121,16 +123,11 @@ void TcpServer::applyConfiguration(
     const bool success =
         broadcastMessage(object);
 
-    if (!success)
+    if (success)
     {
         emit eventOccurred(
-            "Нет подключенных клиентов");
-
-        return;
+            "Конфигурация лимитов отправлена клиентам");
     }
-
-    emit eventOccurred(
-        "Конфигурация лимитов отправлена клиентам");
 }
 
 void TcpServer::onNewConnection()
@@ -143,10 +140,7 @@ void TcpServer::onNewConnection()
         const auto client_id =
             getNewClientId();
 
-        ClientContext context;
-        context.client_id = client_id;
-
-        _clients[socket] = context;
+        _clients[socket].client_id = client_id;
 
         connect(socket,
                 &QTcpSocket::readyRead,
@@ -158,22 +152,41 @@ void TcpServer::onNewConnection()
                 this,
                 &TcpServer::onClientDisconnected);
 
+        connect(socket,
+                &QTcpSocket::errorOccurred,
+                this,
+                &TcpServer::onSocketError);
+
         emit clientConnectionStateChanged(client_id,
                                 socket->peerAddress().toString(),
                                 "Подключен");
 
         emit eventOccurred(
-            QString("Клиент подключился: %1")
+            QString("Клиент %1 подключился")
                 .arg(client_id));
 
-        sendAck(socket);
+        sendAck(socket, client_id);
 
         if (_is_clients_running)
         {
             QJsonObject object;
             object[protocol::kType] = "Start";
 
-            sendMessage(socket, object);
+            if (sendMessage(socket, object))
+            {
+                emit eventOccurred(
+                    QString("Передача данных клиентом %1 начата")
+                        .arg(client_id));
+            }
+            else
+            {
+                emit eventOccurred(
+                    QString("Не удалось начать отправку "
+                            "данных клиентом %1")
+                        .arg(client_id));
+            }
+
+            // ### ОТПРАВИТЬ КОНФИГУРАЦИЮ ЛИМИТОВ
         }
     }
 }
@@ -200,7 +213,7 @@ void TcpServer::onClientDisconnected()
                             "Отключен");
 
     emit eventOccurred(
-        QString("Клиент отключился: %1")
+        QString("Клиент %1 отключился")
             .arg(it->client_id));
 
     _clients.remove(socket);
@@ -258,17 +271,55 @@ QString TcpServer::getNewClientId()
     .arg(++_id_counter);
 }
 
-void TcpServer::sendMessage(
+bool TcpServer::sendMessage(
     QTcpSocket* socket,
     const QJsonObject& object)
 {
+    if (socket == nullptr)
+    {
+        emit eventOccurred(
+            "Ошибка: попытка отправить сообщение в null socket");
+
+        return false;
+    }
+
+    auto it = _clients.find(socket);
+
+    if (it == _clients.end())
+    {
+        emit eventOccurred(
+            "Ошибка: сокет отсутствует в списке клиентов");
+
+        return false;
+    }
+
+    if (socket->state() !=
+        QAbstractSocket::ConnectedState)
+    {
+        emit eventOccurred(
+            QString("Ошибка: клиент %1 не подключен")
+                .arg(it->client_id));
+
+        return false;
+    }
+
     const auto data =
         protocol::Serialize(object);
 
-    if (socket->state() == QAbstractSocket::ConnectedState)
-    {
+    const qint64 written =
         socket->write(data);
+
+    if (written == -1)
+    {
+        emit eventOccurred(
+            QString("Ошибка отправки клиенту %1: %2")
+                .arg(it->client_id,
+                     socket->errorString()));
+
+        return false;
     }
+
+    return true;
 }
 
 bool TcpServer::broadcastMessage(
@@ -276,39 +327,46 @@ bool TcpServer::broadcastMessage(
 {
     bool success = false;
 
-    const auto data =
-        protocol::Serialize(object);
-
     for (auto it = _clients.begin();
          it != _clients.end(); ++it)
     {
-        auto* socket = it.key();
-
-        if (socket->state() !=
-            QAbstractSocket::ConnectedState)
-        {
-            continue;
-        }
-
-        const auto written =
-            socket->write(data);
-
-        if (written != -1)
+        if (sendMessage(it.key(), object))
         {
             success = true;
         }
     }
 
+    if (!success)
+    {
+        emit eventOccurred(
+            "Не удалось отправить сообщение ни одному клиенту");
+    }
+
     return success;
 }
 
-void TcpServer::sendAck(QTcpSocket* socket)
+void TcpServer::sendAck(
+    QTcpSocket* socket,
+    const QString& clientId)
 {
     QJsonObject object;
 
-    object[protocol::kType] = protocol::kAck;
+    object[protocol::kType] =
+        protocol::kAck;
 
-    sendMessage(socket, object);
+    if (sendMessage(socket, object))
+    {
+        emit eventOccurred(
+            QString("Connection Ack отправлен клиенту %1")
+                .arg(clientId));
+    }
+    else
+    {
+        emit eventOccurred(
+            QString("Не удалось отправить "
+                    "Connection Ack клиенту %1")
+                .arg(clientId));
+    }
 }
 
 void TcpServer::processMessage(
@@ -324,13 +382,23 @@ void TcpServer::processMessage(
         emit eventOccurred(
             QString(
                 "Ошибка: не удалось разобрать "
-                "JSON сообщение от клиента: ").arg(clientId));
+                "JSON сообщение от клиента %1").arg(clientId));
 
         return;
     }
 
     const auto type =
         object.take(protocol::kType).toString();
+
+    if (type.isEmpty())
+    {
+        emit eventOccurred(
+            QString(
+                "Ошибка: клиент %1 прислал JSON "
+                "без поля type").arg(clientId));
+
+        return;
+    }
 
     const auto content =
         QString::fromUtf8(
@@ -342,4 +410,28 @@ void TcpServer::processMessage(
         type,
         content,
         QDateTime::currentDateTime());
+}
+
+void TcpServer::onSocketError(
+    QAbstractSocket::SocketError)
+{
+    auto* socket =
+        qobject_cast<QTcpSocket*>(sender());
+
+    if (socket == nullptr)
+    {
+        return;
+    }
+
+    auto it = _clients.find(socket);
+
+    if (it == _clients.end())
+    {
+        return;
+    }
+
+    emit eventOccurred(
+        QString("Ошибка клиента %1: %2")
+            .arg(it->client_id,
+                 socket->errorString()));
 }
