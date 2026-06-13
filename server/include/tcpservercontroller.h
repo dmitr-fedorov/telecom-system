@@ -5,6 +5,7 @@
 #include <QThread>
 
 #include "../include/tcpserver.h"
+#include "../../shared/include/sharedtypes.h"
 
 class TcpServerController : public QObject
 {
@@ -21,10 +22,12 @@ public slots:
 
     void stopClients();
 
-    void applyConfiguration(
-        int limit_value);
+    void applyLimitsConfig(
+        const sharedTypes::LimitsConfig& config);
 
 signals:
+    void serverStarted();
+
     void clientConnectionStateChanged(
         const QString& client_id,
         const QString& ip_address,
@@ -45,5 +48,5 @@ signals:
 private:
     QThread _server_thread;
 
-    TcpServer* _server = nullptr;
+    TcpServer* _tcp_server = nullptr;
 };

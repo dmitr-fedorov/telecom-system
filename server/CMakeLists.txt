@@ -17,19 +17,22 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS
 
 add_executable(${PROJECT_NAME}
     include/mainwindow.h
+    include/configlimitsdialog.h
     include/tcpservercontroller.h
     include/tcpserver.h
 
     src/mainwindow.cpp
+    src/configlimitsdialog.cpp
     src/tcpservercontroller.cpp
     src/tcpserver.cpp
     src/main.cpp
 
     forms/mainwindow.ui
+    forms/configlimitsdialog.ui
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    OUTPUT_NAME "Server"
+    OUTPUT_NAME ${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

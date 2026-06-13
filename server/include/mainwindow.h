@@ -5,6 +5,8 @@
 #include <QMainWindow>
 
 #include "../include/tcpservercontroller.h"
+#include "../include/configlimitsdialog.h"
+#include "../../shared/include/sharedtypes.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -26,11 +28,15 @@ private:
 
     Ui::MainWindow *ui;
 
-    TcpServerController _server_controller;
+    TcpServerController _tcp_server_controller;
 
     QHash<QString, int> _clientRows;
 
+    ConfigLimitsDialog* _configLimitsDialog = nullptr;
+
 private slots:
+    void onServerStarted();
+
     void onClientConnectionStateChanged(
         const QString& client_id,
         const QString& ip_address,
@@ -47,4 +53,9 @@ private slots:
         const QString& type,
         const QString& content,
         const QDateTime& timestamp);
+
+    void onConfigLimitsClicked();
+
+    void onLimitsConfigSubmitted(
+        const sharedTypes::LimitsConfig& config);
 };

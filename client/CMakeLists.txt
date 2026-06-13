@@ -17,13 +17,14 @@ add_executable(${PROJECT_NAME}
   include/tcpclient.h
   include/datagenerationscheduler.h
   include/datagenerator.h
+  include/datavalidator.h
 
   src/main.cpp
   src/deviceemulator.cpp
   src/tcpclient.cpp
   src/datagenerationscheduler.cpp
   src/datagenerator.cpp
-
+  src/datavalidator.cpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

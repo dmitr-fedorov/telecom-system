@@ -48,7 +48,8 @@ void TcpClient::start()
     tryConnect();
 }
 
-void TcpClient::sendData(const QJsonObject& object)
+void TcpClient::sendData(
+    const QJsonObject& json)
 {
     if (_socket.state() != QAbstractSocket::ConnectedState)
     {
@@ -56,7 +57,7 @@ void TcpClient::sendData(const QJsonObject& object)
     }
 
     auto data =
-        protocol::Serialize(object);
+        protocol::Serialize(json);
 
     _socket.write(data);
 }
@@ -101,24 +102,26 @@ void TcpClient::onReadyRead()
     }
 }
 
-void TcpClient::processMessage(const QByteArray& message)
+void TcpClient::processMessage(
+    const QByteArray& message)
 {
-    QJsonObject object;
+    QJsonObject json;
 
-    if (!protocol::Deserialize(message, &object))
+    if (!protocol::Deserialize(message, &json))
     {
         qInfo() << "Failed to parse JSON message";
 
         return;
     }
 
-    handleJsonMessage(object);
+    handleJsonMessage(json);
 }
 
-void TcpClient::handleJsonMessage(const QJsonObject& object)
+void TcpClient::handleJsonMessage(
+    const QJsonObject& json)
 {
     const QString type =
-        object[protocol::kType].toString();
+        json[protocol::kType].toString();
 
     if (type == protocol::kAck)
     {
@@ -126,7 +129,8 @@ void TcpClient::handleJsonMessage(const QJsonObject& object)
 
         return;
     }
-    else if (type == protocol::kStart)
+    else if (type ==
+               protocol::kStartTransmission)
     {
         qInfo() << "Start command received";
 
@@ -134,7 +138,8 @@ void TcpClient::handleJsonMessage(const QJsonObject& object)
 
         return;
     }
-    else if (type == protocol::kStop)
+    else if (type ==
+               protocol::kStopTransmission)
     {
         qInfo() << "Stop command received";
 
@@ -142,11 +147,62 @@ void TcpClient::handleJsonMessage(const QJsonObject& object)
 
         return;
     }
+    else if (type ==
+               protocol::kLimitsConfig)
+    {
+        qInfo() << "Limits configuration received";
+
+        handleLimitsConfigMessage(json);
+
+        return;
+    }
 
     qInfo() << "Unknown message type: " << type;
 }
 
-void TcpClient::onErrorOccurred(QAbstractSocket::SocketError error)
+void TcpClient::handleLimitsConfigMessage(
+    const QJsonObject& json)
+{
+    sharedTypes::LimitsConfig config;
+
+    QJsonValue val =
+        json.value(protocol::kLatency);
+
+    if (!val.isUndefined() &&
+        !val.isNull())
+    {
+        config.latency = val.toDouble();
+    }
+
+    val = json.value(protocol::kErrors);
+
+    if (!val.isUndefined() &&
+        !val.isNull())
+    {
+        config.errors = val.toInt();
+    }
+
+    val = json.value(protocol::kCpuUsage);
+
+    if (!val.isUndefined() &&
+        !val.isNull())
+    {
+        config.cpu_usage = val.toInt();
+    }
+
+    val = json.value(protocol::kTemperature);
+
+    if (!val.isUndefined() &&
+        !val.isNull())
+    {
+        config.temperature = val.toDouble();
+    }
+
+    emit limitsConfigReceived(config);
+}
+
+void TcpClient::onErrorOccurred(
+    QAbstractSocket::SocketError error)
 {
     Q_UNUSED(error);
 

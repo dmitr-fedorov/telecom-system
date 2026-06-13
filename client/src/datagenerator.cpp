@@ -44,53 +44,53 @@ QJsonObject DataGenerator::GenerateNetworkMetrics()
     result[protocol::kType] =
         protocol::kNetworkMetrics;
 
-    result["bandwidth"] =
+    result[protocol::kBandwidth] =
         RandomDouble(10.0, 1000.0);
 
     if (size >= MessageSize::Medium)
     {
-        result["latency"] =
+        result[protocol::kLatency] =
             RandomDouble(1.0, 150.0);
 
-        result["packet_loss"] =
+        result[protocol::kPacketLoss] =
             RandomDouble(0.0, 5.0);
 
-        result["signal_strength"] =
+        result[protocol::kSignalStrength] =
             RandomDouble(40.0, 100.0);
     }
 
     if (size == MessageSize::Long)
     {
-        result["mtu"] =
+        result[protocol::kMtu] =
             RandomDouble(576.0, 9000.0);
 
-        result["rtt"] =
+        result[protocol::kRtt] =
             RandomDouble(10.0, 900000.0);
 
-        result["link_speed"] =
+        result[protocol::kLinkSpeed] =
             RandomDouble(100.0, 900000.0);
 
-        result["jitter"] =
+        result[protocol::kJitter] =
             QRandomGenerator::global()->bounded(
                 1,
                 30);
 
-        result["throughput"] =
+        result[protocol::kThroughput] =
             QRandomGenerator::global()->bounded(
                 10,
                 1500);
 
-        result["sent_packets"] =
+        result[protocol::kSentPackets] =
             QRandomGenerator::global()->bounded(
                 100000,
                 500000);
 
-        result["received_packets"] =
+        result[protocol::kReceivedPackets] =
             QRandomGenerator::global()->bounded(
                 100000,
                 500000);
 
-        result["errors"] =
+        result[protocol::kErrors] =
             QRandomGenerator::global()->bounded(
                 0,
                 1000);
@@ -109,58 +109,58 @@ QJsonObject DataGenerator::GenerateDeviceStatus()
     result[protocol::kType] =
         protocol::kDeviceStatus;
 
-    result["uptime"] =
+    result[protocol::kUptime] =
         QRandomGenerator::global()->bounded(
             1000,
             1000000);
 
     if (size >= MessageSize::Medium)
     {
-        result["cpu_usage"] =
+        result[protocol::kCpuUsage] =
             QRandomGenerator::global()->bounded(
                 0,
                 100);
 
-        result["memory_usage"] =
+        result[protocol::kMemoryUsage] =
             QRandomGenerator::global()->bounded(
                 0,
                 100);
 
-        result["temperature"] =
+        result[protocol::kTemperature] =
             RandomDouble(25.0, 100.0);
     }
 
     if (size == MessageSize::Long)
     {
-        result["system_up_time"] =
+        result[protocol::kSystemUpTime] =
             RandomDouble(1.0, 10000.0);
 
-        result["power_supply"] =
+        result[protocol::kPowerSupply] =
             QRandomGenerator::global()->bounded(
                 0,
                 10);
 
-        result["buffer_misses"] =
+        result[protocol::kBufferMisses] =
             QRandomGenerator::global()->bounded(
                 0,
                 100000);
 
-        result["active_tasks"] =
+        result[protocol::kActiveTasks] =
             QRandomGenerator::global()->bounded(
                 0,
                 500);
 
-        result["storage_available"] =
+        result[protocol::kStorageAvailable] =
             QRandomGenerator::global()->bounded(
                 10,
                 500);
 
-        result["active_processes"] =
+        result[protocol::kActiveProcesses] =
             QRandomGenerator::global()->bounded(
                 20,
                 300);
 
-        result["warnings"] =
+        result[protocol::kWarnings] =
             QRandomGenerator::global()->bounded(
                 0,
                 10);
@@ -179,9 +179,10 @@ QJsonObject DataGenerator::GenerateLog()
     result[protocol::kType] =
         protocol::kLog;
 
-    result["severity"] = "INFO";
+    result[protocol::kSeverity] =
+        protocol::kInfo;
 
-    result["message"] =
+    result[protocol::kMessage] =
         GenerateLogText(size);
 
     return result;

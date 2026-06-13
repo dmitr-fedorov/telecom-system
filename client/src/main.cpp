@@ -6,6 +6,9 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
+    qRegisterMetaType<sharedTypes::LimitsConfig>(
+        "sharedTypes::LimitsConfig");
+
     DeviceEmulator deviceEmulator;
     deviceEmulator.start();
 

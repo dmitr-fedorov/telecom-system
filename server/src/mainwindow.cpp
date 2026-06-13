@@ -12,39 +12,62 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->pb_start_stop->setText(START_TEXT);
 
+    ui->pb_start_stop->setEnabled(false);
+    ui->pb_config_limits->setEnabled(false);
+
+    _configLimitsDialog =
+        new ConfigLimitsDialog(this);
+
+    connect(ui->pb_config_limits,
+            &QPushButton::clicked,
+            this,
+            &MainWindow::onConfigLimitsClicked);
+
+    connect(_configLimitsDialog,
+            &ConfigLimitsDialog::limitsConfigSubmitted,
+            this,
+            &MainWindow::onLimitsConfigSubmitted);
+
     connect(ui->pb_start_stop,
             &QPushButton::clicked,
             this,
             &MainWindow::onClientsStartStopClicked);
 
-    connect(ui->pb_config_limits,
-            &QPushButton::clicked,
-            this,
-            [this]()
-            {
-                _server_controller.applyConfiguration(0);
-            });
-
-    connect(&_server_controller,
+    connect(&_tcp_server_controller,
             &TcpServerController::clientConnectionStateChanged,
             this,
             &MainWindow::onClientConnectionStateChanged);
 
-    connect(&_server_controller,
+    connect(&_tcp_server_controller,
             &TcpServerController::clientsRunningStateChanged,
             this,
             &MainWindow::onClientsRunningStateChanged);
 
-    connect(&_server_controller, &TcpServerController::eventOccurred,
-            this, &MainWindow::onEventOccured);
+    connect(&_tcp_server_controller,
+            &TcpServerController::eventOccurred,
+            this,
+            &MainWindow::onEventOccured);
 
-    connect(&_server_controller, &TcpServerController::clientDataReceived,
-            this, &MainWindow::onClientDataReceived);
+    connect(&_tcp_server_controller,
+            &TcpServerController::clientDataReceived,
+            this,
+            &MainWindow::onClientDataReceived);
+
+    connect(&_tcp_server_controller,
+            &TcpServerController::serverStarted,
+            this,
+            &MainWindow::onServerStarted);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::onServerStarted()
+{
+    ui->pb_start_stop->setEnabled(true);
+    ui->pb_config_limits->setEnabled(true);
 }
 
 void MainWindow::onClientConnectionStateChanged(
@@ -60,6 +83,8 @@ void MainWindow::onClientConnectionStateChanged(
 
         ui->tw_clients_info->item(row, 2)
             ->setText(state);
+
+        return;
     }
 
     const int row =
@@ -91,11 +116,11 @@ void MainWindow::onClientsStartStopClicked()
 {
     if (ui->pb_start_stop->text() == START_TEXT)
     {
-        _server_controller.startClients();
+        _tcp_server_controller.startClients();
     }
     else
     {
-        _server_controller.stopClients();
+        _tcp_server_controller.stopClients();
     }
 
     ui->pb_start_stop->setEnabled(false);
@@ -145,4 +170,16 @@ void MainWindow::onClientDataReceived(
         3,
         new QTableWidgetItem(
             timestamp.toString("HH:mm:ss")));
+}
+
+void MainWindow::onConfigLimitsClicked()
+{
+    _configLimitsDialog->exec();
+}
+
+void MainWindow::onLimitsConfigSubmitted(
+    const sharedTypes::LimitsConfig& config)
+{
+    _tcp_server_controller
+        .applyLimitsConfig(config);
 }

@@ -13,6 +13,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 
 add_library(${PROJECT_NAME}
     include/protocol.h
+    include/sharedtypes.h
+
     src/protocol.cpp
 )
 

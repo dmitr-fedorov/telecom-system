@@ -4,36 +4,39 @@ TcpServerController::TcpServerController(
     QObject* parent)
     : QObject(parent)
 {
-    _server = new TcpServer();
-    _server->moveToThread(&_server_thread);
+    _tcp_server = new TcpServer();
+    _tcp_server->moveToThread(&_server_thread);
 
     connect(&_server_thread, &QThread::started,
-            _server, &TcpServer::startServer);
+            _tcp_server, &TcpServer::startServer);
 
     connect(&_server_thread, &QThread::finished,
-            _server, &QObject::deleteLater);
+            _tcp_server, &QObject::deleteLater);
 
-    connect(_server, &TcpServer::clientConnectionStateChanged,
+    connect(_tcp_server, &TcpServer::clientConnectionStateChanged,
             this, &TcpServerController::clientConnectionStateChanged);
 
-    connect(_server, &TcpServer::eventOccurred,
+    connect(_tcp_server, &TcpServer::eventOccurred,
             this, &TcpServerController::eventOccurred);
 
-    connect(_server, &TcpServer::clientsRunningStateChanged,
+    connect(_tcp_server, &TcpServer::clientsRunningStateChanged,
             this, &TcpServerController::clientsRunningStateChanged);
 
-    connect(_server, &TcpServer::clientDataReceived,
+    connect(_tcp_server, &TcpServer::clientDataReceived,
             this, &TcpServerController::clientDataReceived);
+
+    connect(_tcp_server, &TcpServer::serverStarted,
+            this, &TcpServerController::serverStarted);
 
     _server_thread.start();
 }
 
 TcpServerController::~TcpServerController()
 {
-    if (_server != nullptr)
+    if (_tcp_server != nullptr)
     {
         QMetaObject::invokeMethod(
-            _server,
+            _tcp_server,
             &TcpServer::stopServer,
             Qt::BlockingQueuedConnection);
     }
@@ -45,7 +48,7 @@ TcpServerController::~TcpServerController()
 void TcpServerController::startClients()
 {
     QMetaObject::invokeMethod(
-        _server,
+        _tcp_server,
         &TcpServer::startClients,
         Qt::QueuedConnection);
 }
@@ -53,19 +56,19 @@ void TcpServerController::startClients()
 void TcpServerController::stopClients()
 {
     QMetaObject::invokeMethod(
-        _server,
+        _tcp_server,
         &TcpServer::stopClients,
         Qt::QueuedConnection);
 }
 
-void TcpServerController::applyConfiguration(
-    int limit_value)
+void TcpServerController::applyLimitsConfig(
+    const sharedTypes::LimitsConfig& config)
 {
     QMetaObject::invokeMethod(
-        _server,
+        _tcp_server,
         [=]()
         {
-            _server->applyConfiguration(limit_value);
+            _tcp_server->applyLimitsConfig(config);
         },
         Qt::QueuedConnection);
 }

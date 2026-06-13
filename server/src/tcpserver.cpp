@@ -32,6 +32,8 @@ void TcpServer::startServer()
         return;
     }
 
+    emit serverStarted();
+
     emit eventOccurred(
         QString("Сервер запущен на порте %1")
             .arg(_SERVER_PORT));
@@ -76,7 +78,8 @@ void TcpServer::startClients()
     }
 
     QJsonObject object;
-    object[protocol::kType] = "Start";
+    object[protocol::kType] =
+        protocol::kStartTransmission;
 
     broadcastMessage(object);
 
@@ -100,7 +103,8 @@ void TcpServer::stopClients()
     }
 
     QJsonObject object;
-    object[protocol::kType] = "Stop";
+    object[protocol::kType] =
+        protocol::kStopTransmission;
 
     broadcastMessage(object);
 
@@ -113,21 +117,18 @@ void TcpServer::stopClients()
         _is_clients_running);
 }
 
-void TcpServer::applyConfiguration(
-    int limit_value)
+void TcpServer::applyLimitsConfig(
+    const sharedTypes::LimitsConfig& config)
 {
-    QJsonObject object;
-    object[protocol::kType] = "Config";
-    object["limit"] = limit_value;
+    _last_limits_config = config;
 
-    const bool success =
-        broadcastMessage(object);
+    auto configJson =
+        toJson(config);
 
-    if (success)
-    {
-        emit eventOccurred(
-            "Конфигурация лимитов отправлена клиентам");
-    }
+    broadcastMessage(configJson);
+
+    emit eventOccurred(
+            "Конфигурация лимитов применена");
 }
 
 void TcpServer::onNewConnection()
@@ -167,26 +168,11 @@ void TcpServer::onNewConnection()
 
         sendAck(socket, client_id);
 
+        sendLastLimitsConfig(socket, client_id);
+
         if (_is_clients_running)
         {
-            QJsonObject object;
-            object[protocol::kType] = "Start";
-
-            if (sendMessage(socket, object))
-            {
-                emit eventOccurred(
-                    QString("Передача данных клиентом %1 начата")
-                        .arg(client_id));
-            }
-            else
-            {
-                emit eventOccurred(
-                    QString("Не удалось начать отправку "
-                            "данных клиентом %1")
-                        .arg(client_id));
-            }
-
-            // ### ОТПРАВИТЬ КОНФИГУРАЦИЮ ЛИМИТОВ
+            sendStartCommand(socket, client_id);
         }
     }
 }
@@ -367,6 +353,86 @@ void TcpServer::sendAck(
                     "Connection Ack клиенту %1")
                 .arg(clientId));
     }
+}
+
+void TcpServer::sendStartCommand(
+    QTcpSocket* socket,
+    const QString& clientId)
+{
+    QJsonObject object;
+    object[protocol::kType] =
+        protocol::kStartTransmission;
+
+    if (sendMessage(socket, object))
+    {
+        emit eventOccurred(
+            QString("Передача данных клиентом %1 начата")
+                .arg(clientId));
+    }
+    else
+    {
+        emit eventOccurred(
+            QString("Не удалось начать отправку "
+                    "данных клиентом %1")
+                .arg(clientId));
+    }
+}
+
+void TcpServer::sendLastLimitsConfig(
+    QTcpSocket* socket,
+    const QString& clientId)
+{
+    auto configJson =
+        toJson(_last_limits_config);
+
+    if (sendMessage(socket, configJson))
+    {
+        emit eventOccurred(
+            QString("Конфигурация лимитов "
+                    "отправлена клиенту %1")
+                .arg(clientId));
+    }
+    else
+    {
+        emit eventOccurred(
+            QString("Не удалось отправить "
+                    "конфигурацию лимитов клиенту %1")
+                .arg(clientId));
+    }
+}
+
+QJsonObject TcpServer::toJson(
+    const sharedTypes::LimitsConfig& config)
+{
+    QJsonObject result;
+    result[protocol::kType] =
+        protocol::kLimitsConfig;
+
+    if (config.latency.has_value())
+    {
+        result[protocol::kLatency] =
+            config.latency.value();
+    }
+
+    if (config.errors.has_value())
+    {
+        result[protocol::kErrors] =
+            config.errors.value();
+    }
+
+    if (config.cpu_usage.has_value())
+    {
+        result[protocol::kCpuUsage] =
+            config.cpu_usage.value();
+    }
+
+    if (config.temperature.has_value())
+    {
+        result[protocol::kTemperature] =
+            config.temperature.value();
+    }
+
+    return result;
 }
 
 void TcpServer::processMessage(

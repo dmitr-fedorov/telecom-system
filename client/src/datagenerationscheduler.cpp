@@ -38,7 +38,7 @@ void DataGenerationScheduler::generateRandomData()
         return;
     }
 
-    const auto randomData =
+    auto randomData =
         DataGenerator::GenerateRandomData();
 
     emit dataGenerated(randomData);

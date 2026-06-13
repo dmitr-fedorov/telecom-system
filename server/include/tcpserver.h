@@ -10,6 +10,7 @@
 #include <QObject>
 
 #include "../../shared/include/protocol.h"
+#include "../../shared/include/sharedtypes.h"
 
 class TcpServer : public QObject
 {
@@ -28,10 +29,12 @@ public slots:
 
     void stopClients();
 
-    void applyConfiguration(
-        int limit_value);
+    void applyLimitsConfig(
+        const sharedTypes::LimitsConfig& config);
 
 signals:
+    void serverStarted();
+
     void clientsRunningStateChanged(
         bool running);
 
@@ -67,6 +70,8 @@ private:
 
     std::atomic_uint64_t _id_counter = 0;
 
+    sharedTypes::LimitsConfig _last_limits_config;
+
     QString getNewClientId();
 
     bool sendMessage(
@@ -79,6 +84,17 @@ private:
     void sendAck(
         QTcpSocket* socket,
         const QString& clientId);
+
+    void sendStartCommand(
+        QTcpSocket* socket,
+        const QString& clientId);
+
+    void sendLastLimitsConfig(
+        QTcpSocket* socket,
+        const QString& clientId);
+
+    QJsonObject toJson(
+        const sharedTypes::LimitsConfig& config);
 
     void processMessage(
         const QString& clientId,

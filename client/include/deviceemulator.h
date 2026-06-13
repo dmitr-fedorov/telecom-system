@@ -4,6 +4,7 @@
 
 #include "tcpclient.h"
 #include "datagenerationscheduler.h"
+#include "datavalidator.h"
 
 class DeviceEmulator : public QObject
 {
@@ -19,4 +20,7 @@ private:
 
     DataGenerationScheduler*
         _genScheduler = nullptr;
+
+    DataValidator*
+        _dataValidator = nullptr;
 };
