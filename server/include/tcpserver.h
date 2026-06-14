@@ -100,8 +100,8 @@ private:
         const QString& clientId,
         const QByteArray& message);
 
-    void processLogMessage(
-        const QString& clientId,
+    QString formatContent(
+        const QString& type,
         const QJsonObject& object);
 
 private slots:

@@ -467,15 +467,39 @@ void TcpServer::processMessage(
     }
 
     const auto content =
-        QString::fromUtf8(
-            QJsonDocument(object)
-                .toJson(QJsonDocument::Compact));
+        formatContent(type, object);
 
     emit clientDataReceived(
         clientId,
         type,
         content,
         QDateTime::currentDateTime());
+}
+
+QString TcpServer::formatContent(
+    const QString& type,
+    const QJsonObject& object)
+{
+    if (type == protocol::kLog)
+    {
+        return QString("[%1] %2")
+        .arg(object.value(protocol::kSeverity).toString(),
+             object.value(protocol::kMessage).toString());
+    }
+
+    QStringList parts;
+
+    for (auto it = object.begin();
+         it != object.end();
+         ++it)
+    {
+        parts.append(
+            QString("%1=%2")
+                .arg(it.key(),
+                     it.value().toVariant().toString()));
+    }
+
+    return parts.join(", ");
 }
 
 void TcpServer::onSocketError(
