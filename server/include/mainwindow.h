@@ -2,10 +2,15 @@
 
 #include <QDateTime>
 #include <QHash>
+#include <QVector>
 #include <QMainWindow>
+#include <QScrollBar>
+#include <QTimer>
 
+#include "../include/apptypes.h"
 #include "../include/tcpservercontroller.h"
 #include "../include/configlimitsdialog.h"
+
 #include "../../shared/include/sharedtypes.h"
 
 QT_BEGIN_NAMESPACE
@@ -30,17 +35,19 @@ private:
 
     TcpServerController _tcp_server_controller;
 
-    QHash<QString, int> _clientRows;
+    QHash<QString, int> _client_info_rows;
 
-    ConfigLimitsDialog* _configLimitsDialog = nullptr;
+    QTimer _update_timer;
+
+    QVector<appTypes::ClientData> _pending_data_rows;
+
+    ConfigLimitsDialog* _config_limits_dialog = nullptr;
 
 private slots:
     void onServerStarted();
 
     void onClientConnectionStateChanged(
-        const QString& client_id,
-        const QString& ip_address,
-        const QString& state);
+        const appTypes::ClientInfo& info);
 
     void onClientsStartStopClicked();
 
@@ -49,10 +56,9 @@ private slots:
     void onEventOccured(const QString& event);
 
     void onClientDataReceived(
-        const QString& clientId,
-        const QString& type,
-        const QString& content,
-        const QDateTime& timestamp);
+        const appTypes::ClientData& data);
+
+    void addPendingRows();
 
     void onConfigLimitsClicked();
 

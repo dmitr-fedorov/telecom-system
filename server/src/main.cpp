@@ -1,4 +1,6 @@
+#include "../include/apptypes.h"
 #include "../include/mainwindow.h"
+
 #include "../../shared/include/sharedtypes.h"
 
 #include <QApplication>
@@ -8,6 +10,12 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
+    qRegisterMetaType<appTypes::ClientInfo>(
+        "appTypes::ClientInfo");
+
+    qRegisterMetaType<appTypes::ClientData>(
+        "appTypes::ClientData");
 
     qRegisterMetaType<sharedTypes::LimitsConfig>(
         "sharedTypes::LimitsConfig");

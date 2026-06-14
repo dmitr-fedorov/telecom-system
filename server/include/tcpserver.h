@@ -3,11 +3,12 @@
 #include <QDateTime>
 #include <QHash>
 #include <QHostAddress>
-#include <QJsonDocument>
 #include <QJsonObject>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QObject>
+
+#include "../include/apptypes.h"
 
 #include "../../shared/include/protocol.h"
 #include "../../shared/include/sharedtypes.h"
@@ -39,18 +40,13 @@ signals:
         bool running);
 
     void clientConnectionStateChanged(
-        const QString& client_id,
-        const QString& ip_address,
-        const QString& state);
+        const appTypes::ClientInfo& info);
 
     void eventOccurred(
         const QString& event);
 
     void clientDataReceived(
-        const QString& clientId,
-        const QString& type,
-        const QString& content,
-        const QDateTime& timestamp);
+        const appTypes::ClientData& data);
 
 private:
     struct ClientContext
@@ -83,22 +79,22 @@ private:
 
     void sendAck(
         QTcpSocket* socket,
-        const QString& clientId);
+        const QString& client_id);
 
     void sendStartCommand(
         QTcpSocket* socket,
-        const QString& clientId);
+        const QString& client_id);
 
     void sendLastLimitsConfig(
         QTcpSocket* socket,
-        const QString& clientId);
+        const QString& client_id);
 
     QJsonObject toJson(
         const sharedTypes::LimitsConfig& config);
 
     void processMessage(
-        const QString& clientId,
-        const QByteArray& message);
+        const QByteArray& message,
+        const QString& client_id);
 
     QString formatContent(
         const QString& type,

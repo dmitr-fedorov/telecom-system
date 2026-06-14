@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tw_clients_data->setColumnWidth(2, 700);
     ui->tw_clients_data->setColumnWidth(3, 80);
 
-    _configLimitsDialog =
+    _config_limits_dialog =
         new ConfigLimitsDialog(this);
 
     connect(ui->pb_config_limits,
@@ -38,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
             this,
             &MainWindow::onConfigLimitsClicked);
 
-    connect(_configLimitsDialog,
+    connect(_config_limits_dialog,
             &ConfigLimitsDialog::limitsConfigSubmitted,
             this,
             &MainWindow::onLimitsConfigSubmitted);
@@ -72,6 +72,13 @@ MainWindow::MainWindow(QWidget *parent)
             &TcpServerController::serverStarted,
             this,
             &MainWindow::onServerStarted);
+
+    connect(&_update_timer,
+             &QTimer::timeout,
+             this,
+             &MainWindow::addPendingRows);
+
+    _update_timer.start(300);
 }
 
 MainWindow::~MainWindow()
@@ -86,28 +93,36 @@ void MainWindow::onServerStarted()
 }
 
 void MainWindow::onClientConnectionStateChanged(
-    const QString& client_id,
-    const QString& ip_address,
-    const QString& state)
+    const appTypes::ClientInfo& info)
 {
-    auto it = _clientRows.find(client_id);
+    auto it =
+        _client_info_rows.find(info.client_id);
 
-    if (it != _clientRows.end())
+    if (it != _client_info_rows.end())
     {
         const int row = *it;
 
         ui->tw_clients_info->item(row, 2)
-            ->setText(state);
+            ->setText(info.state);
 
         return;
     }
+
+    auto* scroll_bar =
+        ui->tw_clients_info->verticalScrollBar();
+
+    const bool scroll_was_at_bottom =
+        scroll_bar->value() ==
+        scroll_bar->maximum();
 
     const int row =
         ui->tw_clients_info->rowCount();
 
     ui->tw_clients_info->insertRow(row);
 
-    auto* item = new QTableWidgetItem(client_id);
+    auto* item =
+        new QTableWidgetItem(info.client_id);
+
     item->setTextAlignment(Qt::AlignCenter);
 
     ui->tw_clients_info->setItem(
@@ -115,7 +130,9 @@ void MainWindow::onClientConnectionStateChanged(
         0,
         item);
 
-    item = new QTableWidgetItem(ip_address);
+    item =
+        new QTableWidgetItem(info.ip_address);
+
     item->setTextAlignment(Qt::AlignCenter);
 
     ui->tw_clients_info->setItem(
@@ -123,7 +140,9 @@ void MainWindow::onClientConnectionStateChanged(
         1,
         item);
 
-    item = new QTableWidgetItem(state);
+    item =
+        new QTableWidgetItem(info.state);
+
     item->setTextAlignment(Qt::AlignCenter);
 
     ui->tw_clients_info->setItem(
@@ -131,9 +150,14 @@ void MainWindow::onClientConnectionStateChanged(
         2,
         item);
 
-    _clientRows.insert(
-        client_id,
+    _client_info_rows.insert(
+        info.client_id,
         row);
+
+    if (scroll_was_at_bottom)
+    {
+        ui->tw_clients_info->scrollToBottom();
+    }
 }
 
 void MainWindow::onClientsStartStopClicked()
@@ -164,50 +188,87 @@ void MainWindow::onEventOccured(const QString& event)
 }
 
 void MainWindow::onClientDataReceived(
-    const QString& clientId,
-    const QString& type,
-    const QString& content,
-    const QDateTime& timestamp)
+    const appTypes::ClientData& data)
 {
-    const int row =
+    _pending_data_rows.push_back(data);
+}
+
+void MainWindow::addPendingRows()
+{
+    if (_pending_data_rows.isEmpty())
+    {
+        return;
+    }
+
+    auto* scroll_bar =
+        ui->tw_clients_data->verticalScrollBar();
+
+    const bool scroll_was_at_bottom =
+        scroll_bar->value() ==
+        scroll_bar->maximum();
+
+    ui->tw_clients_data->setUpdatesEnabled(false);
+
+    const auto old_row_count =
         ui->tw_clients_data->rowCount();
 
-    ui->tw_clients_data->insertRow(row);
+    ui->tw_clients_data->setRowCount(
+        old_row_count + _pending_data_rows.size());
 
-    auto* item = new QTableWidgetItem(clientId);
-    item->setTextAlignment(Qt::AlignCenter);
+    auto row = old_row_count;
 
-    ui->tw_clients_data->setItem(
-        row,
-        0,
-        item);
+    for (const auto& data :
+         std::as_const(_pending_data_rows))
+    {
+        auto* item =
+            new QTableWidgetItem(data.client_id);
 
-    item = new QTableWidgetItem(type);
-    item->setTextAlignment(Qt::AlignCenter);
+        item->setTextAlignment(
+            Qt::AlignCenter);
 
-    ui->tw_clients_data->setItem(
-        row,
-        1,
-        item);
+        ui->tw_clients_data->setItem(
+            row, 0, item);
 
-    ui->tw_clients_data->setItem(
-        row,
-        2,
-        new QTableWidgetItem(content));
+        item =
+            new QTableWidgetItem(data.type);
 
-    item = new QTableWidgetItem(
-        timestamp.toString("HH:mm:ss"));
-    item->setTextAlignment(Qt::AlignCenter);
+        item->setTextAlignment(
+            Qt::AlignCenter);
 
-    ui->tw_clients_data->setItem(
-        row,
-        3,
-        item);
+        ui->tw_clients_data->setItem(
+            row, 1, item);
+
+        ui->tw_clients_data->setItem(
+            row,
+            2,
+            new QTableWidgetItem(data.content));
+
+        item =
+            new QTableWidgetItem(
+            data.timestamp.toString("HH:mm:ss"));
+
+        item->setTextAlignment(
+            Qt::AlignCenter);
+
+        ui->tw_clients_data->setItem(
+            row, 3, item);
+
+        ++row;
+    }
+
+    _pending_data_rows.clear();
+
+    ui->tw_clients_data->setUpdatesEnabled(true);
+
+    if (scroll_was_at_bottom)
+    {
+        ui->tw_clients_data->scrollToBottom();
+    }
 }
 
 void MainWindow::onConfigLimitsClicked()
 {
-    _configLimitsDialog->exec();
+    _config_limits_dialog->exec();
 }
 
 void MainWindow::onLimitsConfigSubmitted(

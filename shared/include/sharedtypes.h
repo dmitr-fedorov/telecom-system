@@ -1,7 +1,8 @@
 #pragma once
 
-#include <optional>
 #include <QMetaType>
+
+#include <optional>
 
 namespace sharedTypes
 {

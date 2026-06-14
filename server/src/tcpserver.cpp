@@ -158,9 +158,12 @@ void TcpServer::onNewConnection()
                 this,
                 &TcpServer::onSocketError);
 
-        emit clientConnectionStateChanged(client_id,
-                                socket->peerAddress().toString(),
-                                "Подключен");
+        appTypes::ClientInfo info;
+        info.client_id = client_id;
+        info.ip_address = socket->peerAddress().toString();
+        info.state = "Подключен";
+
+        emit clientConnectionStateChanged(info);
 
         emit eventOccurred(
             QString("Клиент %1 подключился")
@@ -194,9 +197,12 @@ void TcpServer::onClientDisconnected()
         return;
     }
 
-    emit clientConnectionStateChanged(it->client_id,
-                            socket->peerAddress().toString(),
-                            "Отключен");
+    appTypes::ClientInfo info;
+    info.client_id = it->client_id;
+    info.ip_address = socket->peerAddress().toString();
+    info.state = "Отключен";
+
+    emit clientConnectionStateChanged(info);
 
     emit eventOccurred(
         QString("Клиент %1 отключился")
@@ -247,7 +253,7 @@ void TcpServer::onReadyRead()
             0,
             delimiter_index + 1);
 
-        processMessage(it->client_id, message);
+        processMessage(message, it->client_id);
     }
 }
 
@@ -333,7 +339,7 @@ bool TcpServer::broadcastMessage(
 
 void TcpServer::sendAck(
     QTcpSocket* socket,
-    const QString& clientId)
+    const QString& client_id)
 {
     QJsonObject object;
 
@@ -344,20 +350,20 @@ void TcpServer::sendAck(
     {
         emit eventOccurred(
             QString("Connection Ack отправлен клиенту %1")
-                .arg(clientId));
+                .arg(client_id));
     }
     else
     {
         emit eventOccurred(
             QString("Не удалось отправить "
                     "Connection Ack клиенту %1")
-                .arg(clientId));
+                .arg(client_id));
     }
 }
 
 void TcpServer::sendStartCommand(
     QTcpSocket* socket,
-    const QString& clientId)
+    const QString& client_id)
 {
     QJsonObject object;
     object[protocol::kType] =
@@ -367,20 +373,20 @@ void TcpServer::sendStartCommand(
     {
         emit eventOccurred(
             QString("Передача данных клиентом %1 начата")
-                .arg(clientId));
+                .arg(client_id));
     }
     else
     {
         emit eventOccurred(
             QString("Не удалось начать отправку "
                     "данных клиентом %1")
-                .arg(clientId));
+                .arg(client_id));
     }
 }
 
 void TcpServer::sendLastLimitsConfig(
     QTcpSocket* socket,
-    const QString& clientId)
+    const QString& client_id)
 {
     auto configJson =
         toJson(_last_limits_config);
@@ -390,14 +396,14 @@ void TcpServer::sendLastLimitsConfig(
         emit eventOccurred(
             QString("Конфигурация лимитов "
                     "отправлена клиенту %1")
-                .arg(clientId));
+                .arg(client_id));
     }
     else
     {
         emit eventOccurred(
             QString("Не удалось отправить "
                     "конфигурацию лимитов клиенту %1")
-                .arg(clientId));
+                .arg(client_id));
     }
 }
 
@@ -436,8 +442,8 @@ QJsonObject TcpServer::toJson(
 }
 
 void TcpServer::processMessage(
-    const QString& clientId,
-    const QByteArray& message)
+    const QByteArray& message,
+    const QString& client_id)
 {
     QJsonObject object;
 
@@ -448,7 +454,7 @@ void TcpServer::processMessage(
         emit eventOccurred(
             QString(
                 "Ошибка: не удалось разобрать "
-                "JSON сообщение от клиента %1").arg(clientId));
+                "JSON сообщение от клиента %1").arg(client_id));
 
         return;
     }
@@ -461,19 +467,18 @@ void TcpServer::processMessage(
         emit eventOccurred(
             QString(
                 "Ошибка: клиент %1 прислал JSON "
-                "без поля type").arg(clientId));
+                "без поля type").arg(client_id));
 
         return;
     }
 
-    const auto content =
-        formatContent(type, object);
+    appTypes::ClientData data;
+    data.client_id = client_id;
+    data.type = type;
+    data.content = formatContent(type, object);
+    data.timestamp = QDateTime::currentDateTime();
 
-    emit clientDataReceived(
-        clientId,
-        type,
-        content,
-        QDateTime::currentDateTime());
+    emit clientDataReceived(data);
 }
 
 QString TcpServer::formatContent(

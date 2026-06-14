@@ -4,8 +4,10 @@
 #include <QObject>
 #include <QThread>
 
-#include "../include/tcpserver.h"
 #include "../../shared/include/sharedtypes.h"
+
+#include "../include/apptypes.h"
+#include "../include/tcpserver.h"
 
 class TcpServerController : public QObject
 {
@@ -29,9 +31,7 @@ signals:
     void serverStarted();
 
     void clientConnectionStateChanged(
-        const QString& client_id,
-        const QString& ip_address,
-        const QString& state);
+        const appTypes::ClientInfo& info);
 
     void clientsRunningStateChanged(
         bool running);
@@ -40,10 +40,7 @@ signals:
         const QString& event);
 
     void clientDataReceived(
-        const QString& clientId,
-        const QString& type,
-        const QString& content,
-        const QDateTime& timestamp);
+        const appTypes::ClientData& data);
 
 private:
     QThread _server_thread;
