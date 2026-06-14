@@ -15,6 +15,21 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pb_start_stop->setEnabled(false);
     ui->pb_config_limits->setEnabled(false);
 
+    ui->tw_clients_info->setEditTriggers(
+        QAbstractItemView::NoEditTriggers);
+
+    ui->tw_clients_info->setColumnWidth(0, 100);
+    ui->tw_clients_info->setColumnWidth(1, 150);
+    ui->tw_clients_info->setColumnWidth(2, 150);
+
+    ui->tw_clients_data->setEditTriggers(
+        QAbstractItemView::NoEditTriggers);
+
+    ui->tw_clients_data->setColumnWidth(0, 100);
+    ui->tw_clients_data->setColumnWidth(1, 100);
+    ui->tw_clients_data->setColumnWidth(2, 700);
+    ui->tw_clients_data->setColumnWidth(3, 80);
+
     _configLimitsDialog =
         new ConfigLimitsDialog(this);
 
@@ -92,20 +107,29 @@ void MainWindow::onClientConnectionStateChanged(
 
     ui->tw_clients_info->insertRow(row);
 
+    auto* item = new QTableWidgetItem(client_id);
+    item->setTextAlignment(Qt::AlignCenter);
+
     ui->tw_clients_info->setItem(
         row,
         0,
-        new QTableWidgetItem(client_id));
+        item);
+
+    item = new QTableWidgetItem(ip_address);
+    item->setTextAlignment(Qt::AlignCenter);
 
     ui->tw_clients_info->setItem(
         row,
         1,
-        new QTableWidgetItem(ip_address));
+        item);
+
+    item = new QTableWidgetItem(state);
+    item->setTextAlignment(Qt::AlignCenter);
 
     ui->tw_clients_info->setItem(
         row,
         2,
-        new QTableWidgetItem(state));
+        item);
 
     _clientRows.insert(
         client_id,
@@ -150,26 +174,35 @@ void MainWindow::onClientDataReceived(
 
     ui->tw_clients_data->insertRow(row);
 
+    auto* item = new QTableWidgetItem(clientId);
+    item->setTextAlignment(Qt::AlignCenter);
+
     ui->tw_clients_data->setItem(
         row,
         0,
-        new QTableWidgetItem(clientId));
+        item);
+
+    item = new QTableWidgetItem(type);
+    item->setTextAlignment(Qt::AlignCenter);
 
     ui->tw_clients_data->setItem(
         row,
         1,
-        new QTableWidgetItem(type));
+        item);
 
     ui->tw_clients_data->setItem(
         row,
         2,
         new QTableWidgetItem(content));
 
+    item = new QTableWidgetItem(
+        timestamp.toString("HH:mm:ss"));
+    item->setTextAlignment(Qt::AlignCenter);
+
     ui->tw_clients_data->setItem(
         row,
         3,
-        new QTableWidgetItem(
-            timestamp.toString("HH:mm:ss")));
+        item);
 }
 
 void MainWindow::onConfigLimitsClicked()
