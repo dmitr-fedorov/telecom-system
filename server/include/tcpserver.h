@@ -72,10 +72,10 @@ private:
 
     bool sendMessage(
         QTcpSocket* socket,
-        const QJsonObject& object);
+        const QJsonObject& json);
 
     bool broadcastMessage(
-        const QJsonObject& object);
+        const QJsonObject& json);
 
     void sendAck(
         QTcpSocket* socket,
@@ -98,7 +98,7 @@ private:
 
     QString formatContent(
         const QString& type,
-        const QJsonObject& object);
+        const QJsonObject& json);
 
 private slots:
     void onNewConnection();

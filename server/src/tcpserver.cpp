@@ -4,6 +4,7 @@ TcpServer::TcpServer(
     QObject* parent)
     : QObject(parent)
 {
+
 }
 
 void TcpServer::startServer()
@@ -77,11 +78,11 @@ void TcpServer::startClients()
         return;
     }
 
-    QJsonObject object;
-    object[protocol::kType] =
+    QJsonObject json;
+    json[protocol::kType] =
         protocol::kStartTransmission;
 
-    broadcastMessage(object);
+    broadcastMessage(json);
 
     _is_clients_running = true;
 
@@ -102,11 +103,11 @@ void TcpServer::stopClients()
         return;
     }
 
-    QJsonObject object;
-    object[protocol::kType] =
+    QJsonObject json;
+    json[protocol::kType] =
         protocol::kStopTransmission;
 
-    broadcastMessage(object);
+    broadcastMessage(json);
 
     _is_clients_running = false;
 
@@ -265,7 +266,7 @@ QString TcpServer::getNewClientId()
 
 bool TcpServer::sendMessage(
     QTcpSocket* socket,
-    const QJsonObject& object)
+    const QJsonObject& json)
 {
     if (socket == nullptr)
     {
@@ -296,7 +297,7 @@ bool TcpServer::sendMessage(
     }
 
     const auto data =
-        protocol::Serialize(object);
+        protocol::Serialize(json);
 
     const qint64 written =
         socket->write(data);
@@ -315,14 +316,14 @@ bool TcpServer::sendMessage(
 }
 
 bool TcpServer::broadcastMessage(
-    const QJsonObject& object)
+    const QJsonObject& json)
 {
     bool success = false;
 
     for (auto it = _clients.begin();
          it != _clients.end(); ++it)
     {
-        if (sendMessage(it.key(), object))
+        if (sendMessage(it.key(), json))
         {
             success = true;
         }
@@ -341,12 +342,12 @@ void TcpServer::sendAck(
     QTcpSocket* socket,
     const QString& client_id)
 {
-    QJsonObject object;
+    QJsonObject json;
 
-    object[protocol::kType] =
+    json[protocol::kType] =
         protocol::kAck;
 
-    if (sendMessage(socket, object))
+    if (sendMessage(socket, json))
     {
         emit eventOccurred(
             QString("Connection Ack отправлен клиенту %1")
@@ -365,46 +366,43 @@ void TcpServer::sendStartCommand(
     QTcpSocket* socket,
     const QString& client_id)
 {
-    QJsonObject object;
-    object[protocol::kType] =
+    QJsonObject json;
+    json[protocol::kType] =
         protocol::kStartTransmission;
 
-    if (sendMessage(socket, object))
-    {
-        emit eventOccurred(
-            QString("Передача данных клиентом %1 начата")
-                .arg(client_id));
-    }
-    else
-    {
-        emit eventOccurred(
+    if (!sendMessage(socket, json))
+    {        emit eventOccurred(
             QString("Не удалось начать отправку "
                     "данных клиентом %1")
                 .arg(client_id));
     }
+
+    emit eventOccurred(
+        QString("Передача данных клиентом %1 начата")
+            .arg(client_id));
 }
 
 void TcpServer::sendLastLimitsConfig(
     QTcpSocket* socket,
     const QString& client_id)
 {
-    auto configJson =
+    auto json =
         toJson(_last_limits_config);
 
-    if (sendMessage(socket, configJson))
-    {
-        emit eventOccurred(
-            QString("Конфигурация лимитов "
-                    "отправлена клиенту %1")
-                .arg(client_id));
-    }
-    else
+    if (!sendMessage(socket, json))
     {
         emit eventOccurred(
             QString("Не удалось отправить "
                     "конфигурацию лимитов клиенту %1")
                 .arg(client_id));
+
+        return;
     }
+
+    emit eventOccurred(
+        QString("Конфигурация лимитов "
+                "отправлена клиенту %1")
+            .arg(client_id));
 }
 
 QJsonObject TcpServer::toJson(
@@ -445,11 +443,11 @@ void TcpServer::processMessage(
     const QByteArray& message,
     const QString& client_id)
 {
-    QJsonObject object;
+    QJsonObject json;
 
     if (!protocol::Deserialize(
             message,
-            &object))
+            &json))
     {
         emit eventOccurred(
             QString(
@@ -460,7 +458,7 @@ void TcpServer::processMessage(
     }
 
     const auto type =
-        object.take(protocol::kType).toString();
+        json.take(protocol::kType).toString();
 
     if (type.isEmpty())
     {
@@ -475,7 +473,7 @@ void TcpServer::processMessage(
     appTypes::ClientData data;
     data.client_id = client_id;
     data.type = type;
-    data.content = formatContent(type, object);
+    data.content = formatContent(type, json);
     data.timestamp = QDateTime::currentDateTime();
 
     emit clientDataReceived(data);
@@ -483,19 +481,19 @@ void TcpServer::processMessage(
 
 QString TcpServer::formatContent(
     const QString& type,
-    const QJsonObject& object)
+    const QJsonObject& json)
 {
     if (type == protocol::kLog)
     {
         return QString("[%1] %2")
-        .arg(object.value(protocol::kSeverity).toString(),
-             object.value(protocol::kMessage).toString());
+        .arg(json.value(protocol::kSeverity).toString(),
+             json.value(protocol::kMessage).toString());
     }
 
     QStringList parts;
 
-    for (auto it = object.begin();
-         it != object.end();
+    for (auto it = json.begin();
+         it != json.end();
          ++it)
     {
         parts.append(

@@ -39,7 +39,7 @@ private slots:
     void onReadyRead();
 
     void onErrorOccurred(
-        QAbstractSocket::SocketError error);
+        QAbstractSocket::SocketError);
 
     void tryConnect();
 

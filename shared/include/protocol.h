@@ -53,8 +53,11 @@ inline constexpr auto kWarnings = "warnings";
 
 inline constexpr auto TCP_PACKET_DELIMETER = '\n';
 
-QByteArray Serialize(const QJsonObject& object);
+QByteArray Serialize(
+    const QJsonObject& json);
 
-bool Deserialize(const QByteArray& data, QJsonObject* out_object);
+bool Deserialize(
+    const QByteArray& data,
+    QJsonObject* out_json);
 
 } // namespace protocol

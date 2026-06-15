@@ -3,20 +3,24 @@
 namespace protocol
 {
 
-QByteArray Serialize(const QJsonObject& object)
+QByteArray Serialize(
+    const QJsonObject& json)
 {
-    QJsonDocument document(object);
+    QJsonDocument document(json);
 
-    QByteArray data = document.toJson(QJsonDocument::Compact);
+    QByteArray data =
+        document.toJson(QJsonDocument::Compact);
 
     data.append(TCP_PACKET_DELIMETER);
 
     return data;
 }
 
-bool Deserialize(const QByteArray& data, QJsonObject* out_object)
+bool Deserialize(
+    const QByteArray& data,
+    QJsonObject* out_json)
 {
-    if (out_object == nullptr)
+    if (out_json == nullptr)
     {
         return false;
     }
@@ -36,7 +40,7 @@ bool Deserialize(const QByteArray& data, QJsonObject* out_object)
         return false;
     }
 
-    *out_object = document.object();
+    *out_json = document.object();
 
     return true;
 }
