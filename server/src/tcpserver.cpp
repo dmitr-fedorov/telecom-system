@@ -274,8 +274,8 @@ bool TcpServer::broadcastMessage(const QJsonObject& json) {
 
 void TcpServer::sendAck(QTcpSocket* socket, const QString& client_id) {
   QJsonObject json;
-
   json[shared::protocol::k_type] = shared::protocol::k_ack;
+  json[shared::protocol::k_client_id] = client_id;
 
   if (sendMessage(socket, json)) {
     emit eventOccurred(

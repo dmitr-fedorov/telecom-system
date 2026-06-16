@@ -103,7 +103,7 @@ void TcpClient::processMessage(const QByteArray& message) {
 }
 
 void TcpClient::handleJsonMessage(const QJsonObject& json) {
-  const QString type = json[shared::protocol::k_type].toString();
+  const auto type = json[shared::protocol::k_type].toString();
 
   if (type.isEmpty()) {
     qWarning() << "Ошибка: получено JSON "
@@ -114,7 +114,14 @@ void TcpClient::handleJsonMessage(const QJsonObject& json) {
   }
 
   if (type == shared::protocol::k_ack) {
-    qInfo() << "Получено подтверждение соединения";
+    auto client_id = json[shared::protocol::k_client_id].toString();
+
+    if (client_id.isEmpty()) {
+      client_id = QStringLiteral("invalid");
+    }
+
+    qInfo() << "Получено подтверждение соединения."
+            << "Назначен id:" << client_id;
 
     return;
   }

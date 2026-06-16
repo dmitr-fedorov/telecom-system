@@ -17,6 +17,8 @@ inline constexpr auto k_start_transmission = "start_transmission";
 inline constexpr auto k_stop_transmission = "stop_transmission";
 inline constexpr auto k_limits_config = "limits_config";
 
+inline constexpr auto k_client_id = "client_id";
+
 inline constexpr auto k_network_metrics = "NetworkMetrics";
 inline constexpr auto k_device_status = "DeviceStatus";
 inline constexpr auto k_log = "Log";
