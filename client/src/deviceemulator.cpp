@@ -1,48 +1,33 @@
 #include "../include/deviceemulator.h"
 
-DeviceEmulator::DeviceEmulator(QObject* parent)
-    : QObject(parent)
-{
-    _tcpClient = new TcpClient(this);
+namespace client {
 
-    _genScheduler =
-        new DataGenerationScheduler(this);
+DeviceEmulator::DeviceEmulator(QObject* parent) : QObject(parent) {
+  tcp_client_ = new TcpClient(this);
 
-    _dataValidator =
-        new DataValidator(this);
+  data_generation_scheduler_ = new DataGenerationScheduler(this);
 
-    connect(_tcpClient,
-            &TcpClient::startCommandReceived,
-            _genScheduler,
-            &DataGenerationScheduler::start);
+  data_validator_ = new DataValidator(this);
 
-    connect(_tcpClient,
-            &TcpClient::stopCommandReceived,
-            _genScheduler,
-            &DataGenerationScheduler::stop);
+  connect(tcp_client_, &TcpClient::startTransmissionCommandReceived,
+          data_generation_scheduler_, &DataGenerationScheduler::start);
 
-    connect(_genScheduler,
-            &DataGenerationScheduler::dataGenerated,
-            _tcpClient,
-            &TcpClient::sendData);
+  connect(tcp_client_, &TcpClient::stopTransmissionCommandReceived,
+          data_generation_scheduler_, &DataGenerationScheduler::stop);
 
-    connect(_tcpClient,
-            &TcpClient::limitsConfigReceived,
-            _dataValidator,
-            &DataValidator::applyLimitsConfig);
+  connect(data_generation_scheduler_, &DataGenerationScheduler::dataGenerated,
+          tcp_client_, &TcpClient::sendData);
 
-    connect(_genScheduler,
-            &DataGenerationScheduler::dataGenerated,
-            _dataValidator,
-            &DataValidator::validate);
+  connect(tcp_client_, &TcpClient::limitsConfigReceived, data_validator_,
+          &DataValidator::applyLimitsConfig);
 
-    connect(_dataValidator,
-            &DataValidator::warningLogReady,
-            _tcpClient,
-            &TcpClient::sendData);
+  connect(data_generation_scheduler_, &DataGenerationScheduler::dataGenerated,
+          data_validator_, &DataValidator::validate);
+
+  connect(data_validator_, &DataValidator::warningLogReady, tcp_client_,
+          &TcpClient::sendData);
 }
 
-void DeviceEmulator::start()
-{
-    _tcpClient->start();
-}
+void DeviceEmulator::start() { tcp_client_->start(); }
+
+}  // namespace client

@@ -4,109 +4,87 @@
 #include <QHash>
 #include <QHostAddress>
 #include <QJsonObject>
+#include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
-#include <QObject>
-
-#include "../include/apptypes.h"
 
 #include "../../shared/include/protocol.h"
-#include "../../shared/include/sharedtypes.h"
+#include "../../shared/include/types.h"
+#include "../include/types.h"
 
-class TcpServer : public QObject
-{
-    Q_OBJECT
+namespace server {
 
-public:
-    explicit TcpServer(
-        QObject* parent = nullptr);
+class TcpServer : public QObject {
+  Q_OBJECT
 
-public slots:
-    void startServer();
+ public:
+  explicit TcpServer(QObject* parent = nullptr);
 
-    void stopServer();
+ public slots:
+  void startServer();
+  void stopServer();
 
-    void startClients();
+  void startClientsDataTransmission();
+  void stopClientsDataTransmission();
 
-    void stopClients();
+  void applyLimitsConfig(const shared::types::LimitsConfig& config);
 
-    void applyLimitsConfig(
-        const sharedTypes::LimitsConfig& config);
+ signals:
+  void serverStarted();
 
-signals:
-    void serverStarted();
+  void clientConnectionStateChanged(const server::types::ClientInfo& info);
 
-    void clientsRunningStateChanged(
-        bool running);
+  void clientsTransmittingStateChanged(bool transmitting);
 
-    void clientConnectionStateChanged(
-        const appTypes::ClientInfo& info);
+  void clientDataReceived(const server::types::ClientData& data);
 
-    void eventOccurred(
-        const QString& event);
+  void eventOccurred(const QString& event);
 
-    void clientDataReceived(
-        const appTypes::ClientData& data);
+ private:
+  struct ClientContext {
+    QString client_id;
 
-private:
-    struct ClientContext
-    {
-        QString client_id;
+    QByteArray buffer;
+  };
 
-        QByteArray buffer;
-    };
+  static constexpr quint16 server_port_ = 12345;
 
-    static constexpr quint16 _SERVER_PORT = 12345;
+  QTcpServer* server_ = nullptr;
 
-    QTcpServer* _server = nullptr;
+  QHash<QTcpSocket*, ClientContext> clients_;
 
-    QHash<QTcpSocket*, ClientContext> _clients;
+  bool is_clients_running_ = false;
 
-    bool _is_clients_running = false;
+  uint64_t id_counter_ = 0;
 
-    std::atomic_uint64_t _id_counter = 0;
+  shared::types::LimitsConfig last_limits_config_;
 
-    sharedTypes::LimitsConfig _last_limits_config;
+  QString getNewClientId();
 
-    QString getNewClientId();
+  bool sendMessage(QTcpSocket* socket, const QJsonObject& json);
 
-    bool sendMessage(
-        QTcpSocket* socket,
-        const QJsonObject& json);
+  bool broadcastMessage(const QJsonObject& json);
 
-    bool broadcastMessage(
-        const QJsonObject& json);
+  void sendAck(QTcpSocket* socket, const QString& client_id);
 
-    void sendAck(
-        QTcpSocket* socket,
-        const QString& client_id);
+  void sendStartCommand(QTcpSocket* socket, const QString& client_id);
 
-    void sendStartCommand(
-        QTcpSocket* socket,
-        const QString& client_id);
+  void sendLastLimitsConfig(QTcpSocket* socket, const QString& client_id);
 
-    void sendLastLimitsConfig(
-        QTcpSocket* socket,
-        const QString& client_id);
+  QJsonObject toJson(const shared::types::LimitsConfig& config);
 
-    QJsonObject toJson(
-        const sharedTypes::LimitsConfig& config);
+  void processMessage(const QByteArray& message, const QString& client_id);
 
-    void processMessage(
-        const QByteArray& message,
-        const QString& client_id);
+  QString formatContent(const QString& type, const QJsonObject& json);
 
-    QString formatContent(
-        const QString& type,
-        const QJsonObject& json);
+ private slots:
+  void onNewConnection();
 
-private slots:
-    void onNewConnection();
+  void onClientDisconnected();
 
-    void onClientDisconnected();
+  void onReadyRead();
 
-    void onReadyRead();
-
-    void onSocketError(
-        QAbstractSocket::SocketError);
+  void onSocketError(QAbstractSocket::SocketError error);
 };
+
+}  // namespace server

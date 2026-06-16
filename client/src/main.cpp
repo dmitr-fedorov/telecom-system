@@ -2,15 +2,13 @@
 
 #include "../include/deviceemulator.h"
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication a(argc, argv);
+int main(int argc, char *argv[]) {
+  QCoreApplication a(argc, argv);
 
-    qRegisterMetaType<sharedTypes::LimitsConfig>(
-        "sharedTypes::LimitsConfig");
+  qRegisterMetaType<shared::types::LimitsConfig>("shared::types::LimitsConfig");
 
-    DeviceEmulator deviceEmulator;
-    deviceEmulator.start();
+  client::DeviceEmulator deviceEmulator;
+  deviceEmulator.start();
 
-    return a.exec();
+  return a.exec();
 }

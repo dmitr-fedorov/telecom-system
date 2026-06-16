@@ -16,7 +16,7 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS
 )
 
 add_executable(${PROJECT_NAME}
-    include/apptypes.h
+    include/types.h
     include/mainwindow.h
     include/configlimitsdialog.h
     include/tcpservercontroller.h

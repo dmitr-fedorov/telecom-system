@@ -1,36 +1,26 @@
-#include "../include/apptypes.h"
-#include "../include/mainwindow.h"
-
-#include "../../shared/include/sharedtypes.h"
-
 #include <QApplication>
-#include <QTranslator>
 #include <QLibraryInfo>
+#include <QTranslator>
 
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
+#include "../../shared/include/types.h"
+#include "../include/mainwindow.h"
+#include "../include/types.h"
 
-    qRegisterMetaType<appTypes::ClientInfo>(
-        "appTypes::ClientInfo");
+int main(int argc, char *argv[]) {
+  QApplication a(argc, argv);
 
-    qRegisterMetaType<appTypes::ClientData>(
-        "appTypes::ClientData");
+  qRegisterMetaType<server::types::ClientInfo>("server::types::ClientInfo");
+  qRegisterMetaType<server::types::ClientData>("server::types::ClientData");
+  qRegisterMetaType<shared::types::LimitsConfig>("shared::types::LimitsConfig");
 
-    qRegisterMetaType<sharedTypes::LimitsConfig>(
-        "sharedTypes::LimitsConfig");
+  QTranslator translator;
 
-    QTranslator translator;
+  if (translator.load("qtbase_ru",
+                      QLibraryInfo::path(QLibraryInfo::TranslationsPath))) {
+    a.installTranslator(&translator);
+  }
 
-    if (translator.load(
-            "qtbase_ru",
-            QLibraryInfo::path(
-                QLibraryInfo::TranslationsPath)))
-    {
-        a.installTranslator(&translator);
-    }
-
-    MainWindow w;
-    w.show();
-    return a.exec();
+  server::MainWindow w;
+  w.show();
+  return a.exec();
 }

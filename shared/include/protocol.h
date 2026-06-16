@@ -2,62 +2,62 @@
 
 #include <QByteArray>
 #include <QJsonDocument>
-#include <QJsonParseError>
 #include <QJsonObject>
+#include <QJsonParseError>
 #include <QString>
 
-namespace protocol
-{
+namespace shared {
 
-inline constexpr auto kType = "type";
+namespace protocol {
 
-inline constexpr auto kAck = "ack";
-inline constexpr auto kStartTransmission = "start_transmission";
-inline constexpr auto kStopTransmission = "stop_transmission";
-inline constexpr auto kLimitsConfig = "limits_config";
+inline constexpr auto k_type = "type";
 
-inline constexpr auto kNetworkMetrics = "NetworkMetrics";
-inline constexpr auto kDeviceStatus = "DeviceStatus";
-inline constexpr auto kLog = "Log";
+inline constexpr auto k_ack = "ack";
+inline constexpr auto k_start_transmission = "start_transmission";
+inline constexpr auto k_stop_transmission = "stop_transmission";
+inline constexpr auto k_limits_config = "limits_config";
 
-inline constexpr auto kSeverity = "severity";
-inline constexpr auto kInfo = "INFO";
-inline constexpr auto kWarning = "WARNING";
+inline constexpr auto k_network_metrics = "NetworkMetrics";
+inline constexpr auto k_device_status = "DeviceStatus";
+inline constexpr auto k_log = "Log";
 
-inline constexpr auto kMessage = "message";
+inline constexpr auto k_severity = "severity";
+inline constexpr auto k_info = "INFO";
+inline constexpr auto k_warning = "WARNING";
 
-inline constexpr auto kBandwidth = "bandwidth";
-inline constexpr auto kLatency = "latency";
-inline constexpr auto kPacketLoss = "packet_loss";
-inline constexpr auto kSignalStrength = "signal_strength";
-inline constexpr auto kMtu = "mtu";
-inline constexpr auto kRtt = "rtt";
-inline constexpr auto kLinkSpeed = "link_speed";
-inline constexpr auto kJitter = "jitter";
-inline constexpr auto kThroughput = "throughput";
-inline constexpr auto kSentPackets = "sent_packets";
-inline constexpr auto kReceivedPackets = "received_packets";
-inline constexpr auto kErrors = "errors";
+inline constexpr auto k_message = "message";
 
-inline constexpr auto kUptime = "uptime";
-inline constexpr auto kCpuUsage = "cpu_usage";
-inline constexpr auto kMemoryUsage = "memory_usage";
-inline constexpr auto kTemperature = "temperature";
-inline constexpr auto kSystemUpTime = "system_up_time";
-inline constexpr auto kPowerSupply = "power_supply";
-inline constexpr auto kBufferMisses = "buffer_misses";
-inline constexpr auto kActiveTasks = "active_tasks";
-inline constexpr auto kStorageAvailable = "storage_available";
-inline constexpr auto kActiveProcesses = "active_processes";
-inline constexpr auto kWarnings = "warnings";
+inline constexpr auto k_bandwidth = "bandwidth";
+inline constexpr auto k_latency = "latency";
+inline constexpr auto k_packet_loss = "packet_loss";
+inline constexpr auto k_signal_strength = "signal_strength";
+inline constexpr auto k_mtu = "mtu";
+inline constexpr auto k_rtt = "rtt";
+inline constexpr auto k_link_speed = "link_speed";
+inline constexpr auto k_jitter = "jitter";
+inline constexpr auto k_throughput = "throughput";
+inline constexpr auto k_sent_packets = "sent_packets";
+inline constexpr auto k_received_packets = "received_packets";
+inline constexpr auto k_errors = "errors";
 
-inline constexpr auto TCP_PACKET_DELIMETER = '\n';
+inline constexpr auto k_uptime = "uptime";
+inline constexpr auto k_cpu_usage = "cpu_usage";
+inline constexpr auto k_memory_usage = "memory_usage";
+inline constexpr auto k_temperature = "temperature";
+inline constexpr auto k_system_up_time = "system_up_time";
+inline constexpr auto k_power_supply = "power_supply";
+inline constexpr auto k_buffer_misses = "buffer_misses";
+inline constexpr auto k_active_tasks = "active_tasks";
+inline constexpr auto k_storage_available = "storage_available";
+inline constexpr auto k_active_processes = "active_processes";
+inline constexpr auto k_warnings = "warnings";
 
-QByteArray Serialize(
-    const QJsonObject& json);
+inline constexpr auto tcp_packet_delimeter = '\n';
 
-bool Deserialize(
-    const QByteArray& data,
-    QJsonObject* out_json);
+QByteArray Serialize(const QJsonObject& json);
 
-} // namespace protocol
+bool Deserialize(const QByteArray& data, QJsonObject* out_json);
+
+}  // namespace protocol
+
+}  // namespace shared

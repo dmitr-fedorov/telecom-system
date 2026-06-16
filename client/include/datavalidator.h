@@ -3,37 +3,31 @@
 #include <QJsonObject>
 
 #include "../../shared/include/protocol.h"
-#include "../../shared/include/sharedtypes.h"
+#include "../../shared/include/types.h"
 
-class DataValidator : public QObject
-{
-    Q_OBJECT
+namespace client {
 
-public:
-    explicit DataValidator(
-        QObject* parent = nullptr);
+class DataValidator : public QObject {
+  Q_OBJECT
 
-public slots:
-    void applyLimitsConfig(
-        sharedTypes::LimitsConfig& config);
+ public:
+  explicit DataValidator(QObject* parent = nullptr);
 
-    void validate(
-        const QJsonObject& json);
+ public slots:
+  void applyLimitsConfig(shared::types::LimitsConfig& config);
 
-signals:
-    void warningLogReady(
-        const QJsonObject& json);
+  void validate(const QJsonObject& json);
 
-private:
-    sharedTypes::LimitsConfig
-        _limits_config;
+ signals:
+  void warningLogReady(const QJsonObject& json);
 
-    bool hasKey(
-        const QJsonObject& json,
-        const char* key) const noexcept;
+ private:
+  shared::types::LimitsConfig limits_config_;
 
-    void append(
-        QString& message,
-        const QString& name,
-        const QString& value) const noexcept;
+  bool hasKey(const QJsonObject& json, const char* key) const noexcept;
+
+  void append(QString& message, const QString& name,
+              const QString& value) const noexcept;
 };
+
+}  // namespace client

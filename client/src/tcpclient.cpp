@@ -1,299 +1,195 @@
 #include "../include/tcpclient.h"
 
-namespace
-{
+namespace client {
 
-constexpr quint16 SERVER_PORT = 12345;
+TcpClient::TcpClient(QObject* parent) : QObject(parent) {
+  connect(&socket_, &QTcpSocket::connected, this, &TcpClient::onConnected);
 
-constexpr auto SERVER_ADDRESS = "127.0.0.1";
+  connect(&socket_, &QTcpSocket::disconnected, this,
+          &TcpClient::onDisconnected);
 
-constexpr int RECONNECT_INTERVAL_MS = 5000;
+  connect(&socket_, &QTcpSocket::readyRead, this, &TcpClient::onReadyRead);
 
-} // namespace
+  connect(&socket_, &QTcpSocket::errorOccurred, this,
+          &TcpClient::onErrorOccurred);
 
-TcpClient::TcpClient(QObject* parent)
-    : QObject(parent)
-{
-    connect(&_socket,
-            &QTcpSocket::connected,
-            this,
-            &TcpClient::onConnected);
+  reconnect_timer_.setInterval(reconnect_interval_ms_);
+  reconnect_timer_.setSingleShot(true);
 
-    connect(&_socket,
-            &QTcpSocket::disconnected,
-            this,
-            &TcpClient::onDisconnected);
-
-    connect(&_socket,
-            &QTcpSocket::readyRead,
-            this,
-            &TcpClient::onReadyRead);
-
-    connect(&_socket,
-            &QTcpSocket::errorOccurred,
-            this,
-            &TcpClient::onErrorOccurred);
-
-    _reconnect_timer.setInterval(RECONNECT_INTERVAL_MS);
-    _reconnect_timer.setSingleShot(true);
-
-    connect(&_reconnect_timer,
-            &QTimer::timeout,
-            this,
-            &TcpClient::tryConnect);
+  connect(&reconnect_timer_, &QTimer::timeout, this, &TcpClient::tryConnect);
 }
 
-void TcpClient::start()
-{
-    tryConnect();
+void TcpClient::start() { tryConnect(); }
+
+void TcpClient::sendData(const QJsonObject& json) {
+  if (socket_.state() != QAbstractSocket::ConnectedState) {
+    qWarning() << "Ошибка: попытка отправить данные "
+                  "без подключения к серверу";
+
+    return;
+  }
+
+  const auto data = shared::protocol::Serialize(json);
+
+  const qint64 written = socket_.write(data);
+
+  if (written == -1) {
+    qWarning() << "Ошибка: не удалось отправить данные:"
+               << socket_.errorString();
+
+    return;
+  }
 }
 
-void TcpClient::sendData(
-    const QJsonObject& json)
-{
-    if (_socket.state() !=
-        QAbstractSocket::ConnectedState)
-    {
-        qWarning()
-        << "Ошибка: попытка отправить данные "
-           "без подключения к серверу";
-
-        return;
-    }
-
-    const auto data =
-        protocol::Serialize(json);
-
-    const qint64 written =
-        _socket.write(data);
-
-    if (written == -1)
-    {
-        qWarning()
-        << "Ошибка: не удалось отправить данные:"
-        << _socket.errorString();
-
-        return;
-    }
+void TcpClient::onConnected() {
+  qInfo().nospace() << "Подключено к серверу: " << server_address_ << ':'
+                    << server_port_;
 }
 
-void TcpClient::tryConnect()
-{
-    if (_socket.state() !=
-        QAbstractSocket::UnconnectedState)
-    {
-        return;
-    }
+void TcpClient::onDisconnected() {
+  qInfo().nospace() << "Отключено от сервера: " << server_address_ << ':'
+                    << server_port_;
 
-    qInfo().nospace()
-        << "Подключение к серверу: "
-        << SERVER_ADDRESS
-        << ':'
-        << SERVER_PORT
-        << "...";
-
-    _socket.connectToHost(SERVER_ADDRESS, SERVER_PORT);
+  scheduleReconnect();
 }
 
-void TcpClient::onConnected()
-{
-    qInfo().nospace()
-        << "Подключено к серверу: "
-        << SERVER_ADDRESS
-        << ':'
-        << SERVER_PORT;
+void TcpClient::onReadyRead() {
+  read_buffer_.append(socket_.readAll());
+
+  while (read_buffer_.contains(shared::protocol::tcp_packet_delimeter)) {
+    const int delimiter_index =
+        read_buffer_.indexOf(shared::protocol::tcp_packet_delimeter);
+
+    const QByteArray message = read_buffer_.left(delimiter_index);
+
+    read_buffer_.remove(0, delimiter_index + 1);
+
+    processMessage(message);
+  }
 }
 
-void TcpClient::onDisconnected()
-{
-    qInfo().nospace()
-        << "Отключено от сервера: "
-        << SERVER_ADDRESS
-        << ':'
-        << SERVER_PORT;
+void TcpClient::tryConnect() {
+  if (socket_.state() != QAbstractSocket::UnconnectedState) {
+    return;
+  }
 
+  qInfo().nospace() << "Подключение к серверу: " << server_address_ << ':'
+                    << server_port_ << "...";
+
+  socket_.connectToHost(server_address_, server_port_);
+}
+
+void TcpClient::onErrorOccurred(QAbstractSocket::SocketError error) {
+  Q_UNUSED(error);
+
+  qWarning() << "Ошибка сокета:" << socket_.errorString();
+
+  if (socket_.state() != QAbstractSocket::ConnectedState) {
     scheduleReconnect();
+  }
 }
 
-void TcpClient::onReadyRead()
-{
-    _read_buffer.append(_socket.readAll());
+void TcpClient::processMessage(const QByteArray& message) {
+  QJsonObject json;
 
-    while (
-        _read_buffer
-            .contains(protocol::TCP_PACKET_DELIMETER))
-    {
-        const int delimiter_index =
-            _read_buffer.indexOf(protocol::TCP_PACKET_DELIMETER);
+  if (!shared::protocol::Deserialize(message, &json)) {
+    qWarning() << "Ошибка: не удалось разобрать "
+                  "JSON сообщение от сервера";
 
-        const QByteArray message =
-            _read_buffer.left(delimiter_index);
+    return;
+  }
 
-        _read_buffer.remove(0, delimiter_index + 1);
-
-        processMessage(message);
-    }
+  handleJsonMessage(json);
 }
 
-void TcpClient::processMessage(
-    const QByteArray& message)
-{
-    QJsonObject json;
+void TcpClient::handleJsonMessage(const QJsonObject& json) {
+  const QString type = json[shared::protocol::k_type].toString();
 
-    if (!protocol::Deserialize(
-            message,
-            &json))
-    {
-        qWarning()
-            << "Ошибка: не удалось разобрать "
-               "JSON сообщение от сервера";
+  if (type.isEmpty()) {
+    qWarning() << "Ошибка: получено JSON "
+                  "сообщение от сервера "
+                  "без валидного поля type";
 
-        return;
-    }
+    return;
+  }
 
-    handleJsonMessage(json);
-}
+  if (type == shared::protocol::k_ack) {
+    qInfo() << "Получено подтверждение соединения";
 
-void TcpClient::handleJsonMessage(
-    const QJsonObject& json)
-{
-    const QString type =
-        json[protocol::kType].toString();
+    return;
+  }
 
-    if (type.isEmpty())
-    {
-        qWarning()
-            << "Ошибка: получено JSON "
-               "сообщение от сервера "
-               "без валидного поля type";
-
-        return;
-    }
-
-    if (type == protocol::kAck)
-    {
-        qInfo()
-            << "Получено подтверждение соединения";
-
-        return;
-    }
-
-    if (type ==
-        protocol::kStartTransmission)
-    {
-        qInfo()
-            << "Получена команда на начало "
+  if (type == shared::protocol::k_start_transmission) {
+    qInfo() << "Получена команда на начало "
                "отправки данных";
 
-        emit startCommandReceived();
+    emit startTransmissionCommandReceived();
 
-        return;
-    }
+    return;
+  }
 
-    if (type ==
-        protocol::kStopTransmission)
-    {
-        qInfo()
-            << "Получена команда на прекращение "
+  if (type == shared::protocol::k_stop_transmission) {
+    qInfo() << "Получена команда на прекращение "
                "отправки данных";
 
-        emit stopCommandReceived();
+    emit stopTransmissionCommandReceived();
 
-        return;
-    }
+    return;
+  }
 
-    if (type ==
-        protocol::kLimitsConfig)
-    {
-        qInfo() << "Получена конфигурация лимитов";
+  if (type == shared::protocol::k_limits_config) {
+    qInfo() << "Получена конфигурация лимитов";
 
-        handleLimitsConfigMessage(json);
+    handleLimitsConfigMessage(json);
 
-        return;
-    }
+    return;
+  }
 
-    qWarning()
-        << "Ошибка: получено сообщение "
-           "неизвестного типа:" << type;
+  qWarning() << "Ошибка: получено сообщение "
+                "неизвестного типа:"
+             << type;
 }
 
-void TcpClient::handleLimitsConfigMessage(
-    const QJsonObject& json)
-{
-    sharedTypes::LimitsConfig config;
+void TcpClient::handleLimitsConfigMessage(const QJsonObject& json) {
+  shared::types::LimitsConfig config;
 
-    QJsonValue val =
-        json.value(protocol::kLatency);
+  QJsonValue json_value = json.value(shared::protocol::k_latency);
 
-    if (!val.isUndefined() &&
-        !val.isNull() &&
-        val.isDouble())
-    {
-        config.latency =
-            val.toDouble();
-    }
+  if (json_value.isDouble()) {
+    config.latency = json_value.toDouble();
+  }
 
-    val =
-        json.value(protocol::kErrors);
+  json_value = json.value(shared::protocol::k_errors);
 
-    if (!val.isUndefined() &&
-        !val.isNull() &&
-        val.isDouble())
-    {
-        config.errors =
-            val.toInt();
-    }
+  if (json_value.isDouble()) {
+    config.errors = json_value.toInt();
+  }
 
-    val =
-        json.value(protocol::kCpuUsage);
+  json_value = json.value(shared::protocol::k_cpu_usage);
 
-    if (!val.isUndefined() &&
-        !val.isNull() &&
-        val.isDouble())
-    {
-        config.cpu_usage =
-            val.toInt();
-    }
+  if (json_value.isDouble()) {
+    config.cpu_usage = json_value.toInt();
+  }
 
-    val =
-        json.value(protocol::kTemperature);
+  json_value = json.value(shared::protocol::k_temperature);
 
-    if (!val.isUndefined() &&
-        !val.isNull() &&
-        val.isDouble())
-    {
-        config.temperature =
-            val.toDouble();
-    }
+  if (json_value.isDouble()) {
+    config.temperature = json_value.toDouble();
+  }
 
-    emit limitsConfigReceived(config);
+  emit limitsConfigReceived(config);
 }
 
-void TcpClient::onErrorOccurred(
-    QAbstractSocket::SocketError)
-{
-    qWarning()
-        << "Ошибка сокета:"
-        << _socket.errorString();
+void TcpClient::scheduleReconnect() {
+  if (reconnect_timer_.isActive()) {
+    return;
+  }
 
-    if (_socket.state() !=
-        QAbstractSocket::ConnectedState)
-    {
-        scheduleReconnect();
-    }
+  qInfo() << "Повторное соединение "
+             "запланировано через"
+          << reconnect_interval_ms_ << "мс";
+
+  reconnect_timer_.start();
 }
 
-void TcpClient::scheduleReconnect()
-{
-    if (_reconnect_timer.isActive())
-    {
-        return;
-    }
-
-    qInfo() << "Повторное соединение "
-               "запланировано через"
-             << RECONNECT_INTERVAL_MS
-             << "мс";
-
-    _reconnect_timer.start();
-}
+}  // namespace client

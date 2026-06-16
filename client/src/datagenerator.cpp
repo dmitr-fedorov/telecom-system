@@ -1,247 +1,178 @@
 #include "../include/datagenerator.h"
 
-QJsonObject DataGenerator::GenerateRandomData()
-{
-    const auto message_type =
-        QRandomGenerator::global()->bounded(3);
+namespace client {
 
-    QJsonObject result;
+QJsonObject DataGenerator::GenerateRandomData() {
+  const auto message_type = QRandomGenerator::global()->bounded(3);
 
-    switch (message_type)
-    {
-        case 0:
-        {
-            result = GenerateNetworkMetrics();
+  QJsonObject result;
 
-            break;
-        }
+  switch (message_type) {
+    case 0: {
+      result = GenerateNetworkMetrics();
 
-        case 1:
-        {
-            result = GenerateDeviceStatus();
-
-            break;
-        }
-
-        default:
-        {
-            result = GenerateLog();
-
-            break;
-        }
+      break;
     }
 
-    return result;
+    case 1: {
+      result = GenerateDeviceStatus();
+
+      break;
+    }
+
+    default: {
+      result = GenerateLog();
+
+      break;
+    }
+  }
+
+  return result;
 }
 
-QJsonObject DataGenerator::GenerateNetworkMetrics()
-{
-    const MessageSize size =
-        GenerateMessageSize();
+QJsonObject DataGenerator::GenerateNetworkMetrics() {
+  const MessageSize size = GenerateMessageSize();
 
-    QJsonObject result;
+  QJsonObject result;
 
-    result[protocol::kType] =
-        protocol::kNetworkMetrics;
+  result[shared::protocol::k_type] = shared::protocol::k_network_metrics;
 
-    result[protocol::kBandwidth] =
-        RandomDouble(10.0, 1000.0);
+  result[shared::protocol::k_bandwidth] = RandomDouble(10.0, 1000.0);
 
-    if (size >= MessageSize::Medium)
-    {
-        result[protocol::kLatency] =
-            RandomDouble(1.0, 150.0);
+  if (size >= MessageSize::Medium) {
+    result[shared::protocol::k_latency] = RandomDouble(1.0, 150.0);
 
-        result[protocol::kPacketLoss] =
-            RandomDouble(0.0, 5.0);
+    result[shared::protocol::k_packet_loss] = RandomDouble(0.0, 5.0);
 
-        result[protocol::kSignalStrength] =
-            RandomDouble(40.0, 100.0);
-    }
+    result[shared::protocol::k_signal_strength] = RandomDouble(40.0, 100.0);
+  }
 
-    if (size == MessageSize::Long)
-    {
-        result[protocol::kMtu] =
-            RandomDouble(576.0, 9000.0);
+  if (size == MessageSize::Long) {
+    result[shared::protocol::k_mtu] = RandomDouble(576.0, 9000.0);
 
-        result[protocol::kRtt] =
-            RandomDouble(10.0, 900000.0);
+    result[shared::protocol::k_rtt] = RandomDouble(10.0, 900000.0);
 
-        result[protocol::kLinkSpeed] =
-            RandomDouble(100.0, 900000.0);
+    result[shared::protocol::k_link_speed] = RandomDouble(100.0, 900000.0);
 
-        result[protocol::kJitter] =
-            QRandomGenerator::global()->bounded(
-                1,
-                30);
+    result[shared::protocol::k_jitter] =
+        QRandomGenerator::global()->bounded(1, 30);
 
-        result[protocol::kThroughput] =
-            QRandomGenerator::global()->bounded(
-                10,
-                1500);
+    result[shared::protocol::k_throughput] =
+        QRandomGenerator::global()->bounded(10, 1500);
 
-        result[protocol::kSentPackets] =
-            QRandomGenerator::global()->bounded(
-                100000,
-                500000);
+    result[shared::protocol::k_sent_packets] =
+        QRandomGenerator::global()->bounded(100000, 500000);
 
-        result[protocol::kReceivedPackets] =
-            QRandomGenerator::global()->bounded(
-                100000,
-                500000);
+    result[shared::protocol::k_received_packets] =
+        QRandomGenerator::global()->bounded(100000, 500000);
 
-        result[protocol::kErrors] =
-            QRandomGenerator::global()->bounded(
-                0,
-                1000);
-    }
+    result[shared::protocol::k_errors] =
+        QRandomGenerator::global()->bounded(0, 1000);
+  }
 
-    return result;
+  return result;
 }
 
-QJsonObject DataGenerator::GenerateDeviceStatus()
-{
-    const MessageSize size =
-        GenerateMessageSize();
+QJsonObject DataGenerator::GenerateDeviceStatus() {
+  const MessageSize size = GenerateMessageSize();
 
-    QJsonObject result;
+  QJsonObject result;
 
-    result[protocol::kType] =
-        protocol::kDeviceStatus;
+  result[shared::protocol::k_type] = shared::protocol::k_device_status;
 
-    result[protocol::kUptime] =
-        QRandomGenerator::global()->bounded(
-            1000,
-            1000000);
+  result[shared::protocol::k_uptime] =
+      QRandomGenerator::global()->bounded(1000, 1000000);
 
-    if (size >= MessageSize::Medium)
-    {
-        result[protocol::kCpuUsage] =
-            QRandomGenerator::global()->bounded(
-                0,
-                100);
+  if (size >= MessageSize::Medium) {
+    result[shared::protocol::k_cpu_usage] =
+        QRandomGenerator::global()->bounded(0, 100);
 
-        result[protocol::kMemoryUsage] =
-            QRandomGenerator::global()->bounded(
-                0,
-                100);
+    result[shared::protocol::k_memory_usage] =
+        QRandomGenerator::global()->bounded(0, 100);
 
-        result[protocol::kTemperature] =
-            RandomDouble(25.0, 100.0);
-    }
+    result[shared::protocol::k_temperature] = RandomDouble(25.0, 100.0);
+  }
 
-    if (size == MessageSize::Long)
-    {
-        result[protocol::kSystemUpTime] =
-            RandomDouble(1.0, 10000.0);
+  if (size == MessageSize::Long) {
+    result[shared::protocol::k_system_up_time] = RandomDouble(1.0, 10000.0);
 
-        result[protocol::kPowerSupply] =
-            QRandomGenerator::global()->bounded(
-                0,
-                10);
+    result[shared::protocol::k_power_supply] =
+        QRandomGenerator::global()->bounded(0, 10);
 
-        result[protocol::kBufferMisses] =
-            QRandomGenerator::global()->bounded(
-                0,
-                100000);
+    result[shared::protocol::k_buffer_misses] =
+        QRandomGenerator::global()->bounded(0, 100000);
 
-        result[protocol::kActiveTasks] =
-            QRandomGenerator::global()->bounded(
-                0,
-                500);
+    result[shared::protocol::k_active_tasks] =
+        QRandomGenerator::global()->bounded(0, 500);
 
-        result[protocol::kStorageAvailable] =
-            QRandomGenerator::global()->bounded(
-                10,
-                500);
+    result[shared::protocol::k_storage_available] =
+        QRandomGenerator::global()->bounded(10, 500);
 
-        result[protocol::kActiveProcesses] =
-            QRandomGenerator::global()->bounded(
-                20,
-                300);
+    result[shared::protocol::k_active_processes] =
+        QRandomGenerator::global()->bounded(20, 300);
 
-        result[protocol::kWarnings] =
-            QRandomGenerator::global()->bounded(
-                0,
-                10);
-    }
+    result[shared::protocol::k_warnings] =
+        QRandomGenerator::global()->bounded(0, 10);
+  }
 
-    return result;
+  return result;
 }
 
-QJsonObject DataGenerator::GenerateLog()
-{
-    const MessageSize size =
-        GenerateMessageSize();
+QJsonObject DataGenerator::GenerateLog() {
+  const MessageSize size = GenerateMessageSize();
 
-    QJsonObject result;
+  QJsonObject result;
 
-    result[protocol::kType] =
-        protocol::kLog;
+  result[shared::protocol::k_type] = shared::protocol::k_log;
 
-    result[protocol::kSeverity] =
-        protocol::kInfo;
+  result[shared::protocol::k_severity] = shared::protocol::k_info;
 
-    result[protocol::kMessage] =
-        GenerateLogText(size);
+  result[shared::protocol::k_message] = GenerateLogText(size);
 
-    return result;
+  return result;
 }
 
-DataGenerator::MessageSize
-DataGenerator::GenerateMessageSize()
-{
-    const int value =
-        QRandomGenerator::global()->bounded(3);
+DataGenerator::MessageSize DataGenerator::GenerateMessageSize() {
+  const int value = QRandomGenerator::global()->bounded(3);
 
-    if (value == 0)
-    {
-        return MessageSize::Short;
-    }
+  if (value == 0) {
+    return MessageSize::Short;
+  }
 
-    if (value == 1)
-    {
-        return MessageSize::Medium;
-    }
+  if (value == 1) {
+    return MessageSize::Medium;
+  }
 
-    return MessageSize::Long;
+  return MessageSize::Long;
 }
 
-QString DataGenerator::GenerateLogText(
-    MessageSize size)
-{
-    if (size == MessageSize::Short)
-    {
-        return
-            "Connection restarted";
-    }
+QString DataGenerator::GenerateLogText(MessageSize size) {
+  if (size == MessageSize::Short) {
+    return "Connection restarted";
+  }
 
-    if (size == MessageSize::Medium)
-    {
-        return
-            "Temporary communication issue detected "
-            "during data synchronization. "
-            "Recovery completed successfully.";
-    }
+  if (size == MessageSize::Medium) {
+    return "Temporary communication issue detected "
+           "during data synchronization. "
+           "Recovery completed successfully.";
+  }
 
-    return
-        "Application detected temporary instability "
-        "during data synchronization procedure. "
-        "Several reconnect attempts were required "
-        "to restore communication with remote "
-        "services. Monitoring subsystem reported "
-        "increased response time and intermittent "
-        "packet processing delays during the "
-        "recovery interval.";
+  return "Application detected temporary instability "
+         "during data synchronization procedure. "
+         "Several reconnect attempts were required "
+         "to restore communication with remote "
+         "services. Monitoring subsystem reported "
+         "increased response time and intermittent "
+         "packet processing delays during the "
+         "recovery interval.";
 }
 
-double DataGenerator::RandomDouble(double min, double max)
-{
-    const int minInt
-        = static_cast<int>(min * 100.0);
+double DataGenerator::RandomDouble(double min, double max) {
+  const int min_int = static_cast<int>(min * 100.0);
 
-    const int maxInt
-        = static_cast<int>(max * 100.0);
+  const int max_int = static_cast<int>(max * 100.0);
 
-    return QRandomGenerator::global()->bounded(minInt, maxInt) / 100.0;
+  return QRandomGenerator::global()->bounded(min_int, max_int) / 100.0;
 }
+
+}  // namespace client

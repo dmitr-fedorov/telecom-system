@@ -1,48 +1,41 @@
 #include "../include/protocol.h"
 
-namespace protocol
-{
+namespace shared {
 
-QByteArray Serialize(
-    const QJsonObject& json)
-{
-    QJsonDocument document(json);
+namespace protocol {
 
-    QByteArray data =
-        document.toJson(QJsonDocument::Compact);
+QByteArray Serialize(const QJsonObject& json) {
+  QJsonDocument document(json);
 
-    data.append(TCP_PACKET_DELIMETER);
+  QByteArray data = document.toJson(QJsonDocument::Compact);
 
-    return data;
+  data.append(tcp_packet_delimeter);
+
+  return data;
 }
 
-bool Deserialize(
-    const QByteArray& data,
-    QJsonObject* out_json)
-{
-    if (out_json == nullptr)
-    {
-        return false;
-    }
+bool Deserialize(const QByteArray& data, QJsonObject* out_json) {
+  if (out_json == nullptr) {
+    return false;
+  }
 
-    QJsonParseError error;
+  QJsonParseError error;
 
-    const QJsonDocument document =
-        QJsonDocument::fromJson(data, &error);
+  const QJsonDocument document = QJsonDocument::fromJson(data, &error);
 
-    if (error.error != QJsonParseError::NoError)
-    {
-        return false;
-    }
+  if (error.error != QJsonParseError::NoError) {
+    return false;
+  }
 
-    if (!document.isObject())
-    {
-        return false;
-    }
+  if (!document.isObject()) {
+    return false;
+  }
 
-    *out_json = document.object();
+  *out_json = document.object();
 
-    return true;
+  return true;
 }
 
-} // namespace protocol
+}  // namespace protocol
+
+}  // namespace shared

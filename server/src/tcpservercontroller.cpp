@@ -1,74 +1,62 @@
 #include "../include/tcpservercontroller.h"
 
-TcpServerController::TcpServerController(
-    QObject* parent)
-    : QObject(parent)
-{
-    _tcp_server = new TcpServer();
-    _tcp_server->moveToThread(&_server_thread);
+namespace server {
 
-    connect(&_server_thread, &QThread::started,
-            _tcp_server, &TcpServer::startServer);
+TcpServerController::TcpServerController(QObject* parent) : QObject(parent) {
+  tcp_server_ = new TcpServer();
+  tcp_server_->moveToThread(&server_thread_);
 
-    connect(&_server_thread, &QThread::finished,
-            _tcp_server, &QObject::deleteLater);
+  connect(&server_thread_, &QThread::started, tcp_server_,
+          &TcpServer::startServer);
 
-    connect(_tcp_server, &TcpServer::clientConnectionStateChanged,
-            this, &TcpServerController::clientConnectionStateChanged);
+  connect(&server_thread_, &QThread::finished, tcp_server_,
+          &QObject::deleteLater);
 
-    connect(_tcp_server, &TcpServer::eventOccurred,
-            this, &TcpServerController::eventOccurred);
+  connect(tcp_server_, &TcpServer::clientConnectionStateChanged, this,
+          &TcpServerController::clientConnectionStateChanged);
 
-    connect(_tcp_server, &TcpServer::clientsRunningStateChanged,
-            this, &TcpServerController::clientsRunningStateChanged);
+  connect(tcp_server_, &TcpServer::eventOccurred, this,
+          &TcpServerController::eventOccurred);
 
-    connect(_tcp_server, &TcpServer::clientDataReceived,
-            this, &TcpServerController::clientDataReceived);
+  connect(tcp_server_, &TcpServer::clientsTransmittingStateChanged, this,
+          &TcpServerController::clientsTransmittingStateChanged);
 
-    connect(_tcp_server, &TcpServer::serverStarted,
-            this, &TcpServerController::serverStarted);
+  connect(tcp_server_, &TcpServer::clientDataReceived, this,
+          &TcpServerController::clientDataReceived);
 
-    _server_thread.start();
+  connect(tcp_server_, &TcpServer::serverStarted, this,
+          &TcpServerController::serverStarted);
+
+  server_thread_.start();
 }
 
-TcpServerController::~TcpServerController()
-{
-    if (_tcp_server != nullptr)
-    {
-        QMetaObject::invokeMethod(
-            _tcp_server,
-            &TcpServer::stopServer,
-            Qt::BlockingQueuedConnection);
-    }
+TcpServerController::~TcpServerController() {
+  if (tcp_server_ != nullptr) {
+    QMetaObject::invokeMethod(tcp_server_, &TcpServer::stopServer,
+                              Qt::BlockingQueuedConnection);
+  }
 
-    _server_thread.quit();
-    _server_thread.wait();
+  server_thread_.quit();
+  server_thread_.wait();
 }
 
-void TcpServerController::startClients()
-{
-    QMetaObject::invokeMethod(
-        _tcp_server,
-        &TcpServer::startClients,
-        Qt::QueuedConnection);
+void TcpServerController::startClientsDataTransmission() {
+  QMetaObject::invokeMethod(tcp_server_,
+                            &TcpServer::startClientsDataTransmission,
+                            Qt::QueuedConnection);
 }
 
-void TcpServerController::stopClients()
-{
-    QMetaObject::invokeMethod(
-        _tcp_server,
-        &TcpServer::stopClients,
-        Qt::QueuedConnection);
+void TcpServerController::stopClientsDataTransmission() {
+  QMetaObject::invokeMethod(tcp_server_,
+                            &TcpServer::stopClientsDataTransmission,
+                            Qt::QueuedConnection);
 }
 
 void TcpServerController::applyLimitsConfig(
-    const sharedTypes::LimitsConfig& config)
-{
-    QMetaObject::invokeMethod(
-        _tcp_server,
-        [=]()
-        {
-            _tcp_server->applyLimitsConfig(config);
-        },
-        Qt::QueuedConnection);
+    const shared::types::LimitsConfig& config) {
+  QMetaObject::invokeMethod(
+      tcp_server_, [=]() { tcp_server_->applyLimitsConfig(config); },
+      Qt::QueuedConnection);
 }
+
+}  // namespace server

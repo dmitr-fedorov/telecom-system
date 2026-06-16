@@ -1,57 +1,47 @@
 #include "../include/datagenerationscheduler.h"
 
-DataGenerationScheduler::DataGenerationScheduler(
-    QObject* parent)
-    : QObject(parent)
-{
-    generation_timer_.setSingleShot(true);
+namespace client {
 
-    connect(&generation_timer_,
-            &QTimer::timeout,
-            this,
-            &DataGenerationScheduler::generateRandomData);
+DataGenerationScheduler::DataGenerationScheduler(QObject* parent)
+    : QObject(parent) {
+  generation_timer_.setSingleShot(true);
+
+  connect(&generation_timer_, &QTimer::timeout, this,
+          &DataGenerationScheduler::generateRandomData);
 }
 
-void DataGenerationScheduler::start()
-{
-    if (active_)
-    {
-        return;
-    }
+void DataGenerationScheduler::start() {
+  if (active_) {
+    return;
+  }
 
-    active_ = true;
+  active_ = true;
 
-    scheduleNextGeneration();
+  scheduleNextGeneration();
 }
 
-void DataGenerationScheduler::stop()
-{
-    active_ = false;
+void DataGenerationScheduler::stop() {
+  active_ = false;
 
-    generation_timer_.stop();
+  generation_timer_.stop();
 }
 
-void DataGenerationScheduler::generateRandomData()
-{
-    if (!active_)
-    {
-        return;
-    }
+void DataGenerationScheduler::generateRandomData() {
+  if (!active_) {
+    return;
+  }
 
-    auto randomData =
-        DataGenerator::GenerateRandomData();
+  auto randomData = DataGenerator::GenerateRandomData();
 
-    emit dataGenerated(randomData);
+  emit dataGenerated(randomData);
 
-    scheduleNextGeneration();
+  scheduleNextGeneration();
 }
 
-void DataGenerationScheduler::scheduleNextGeneration()
-{
-    const int delay_ms =
-        QRandomGenerator::global()->bounded(
-            10,
-            101);
+void DataGenerationScheduler::scheduleNextGeneration() {
+  const int delay_ms = QRandomGenerator::global()->bounded(10, 101);
 
-    generation_timer_.start(delay_ms);
+  generation_timer_.start(delay_ms);
 }
+
+}  // namespace client

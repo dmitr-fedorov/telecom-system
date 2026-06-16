@@ -3,34 +3,31 @@
 #include <QDateTime>
 #include <QJsonArray>
 #include <QJsonObject>
-#include <QString>
 #include <QRandomGenerator>
+#include <QString>
 
 #include "../../shared/include/protocol.h"
 
-class DataGenerator
-{
-public:
-    static QJsonObject GenerateRandomData();
+namespace client {
 
-private:
-    enum class MessageSize
-    {
-        Short,
-        Medium,
-        Long
-    };
+class DataGenerator {
+ public:
+  static QJsonObject GenerateRandomData();
 
-    static QJsonObject GenerateNetworkMetrics();
+ private:
+  enum class MessageSize { Short, Medium, Long };
 
-    static QJsonObject GenerateDeviceStatus();
+  static QJsonObject GenerateNetworkMetrics();
 
-    static QJsonObject GenerateLog();
+  static QJsonObject GenerateDeviceStatus();
 
-    static MessageSize GenerateMessageSize();
+  static QJsonObject GenerateLog();
 
-    static QString GenerateLogText(
-        MessageSize size);
+  static MessageSize GenerateMessageSize();
 
-    static double RandomDouble(double min, double max);
+  static QString GenerateLogText(MessageSize size);
+
+  static double RandomDouble(double min, double max);
 };
+
+}  // namespace client

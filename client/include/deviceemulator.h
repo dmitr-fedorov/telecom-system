@@ -2,25 +2,26 @@
 
 #include <QObject>
 
-#include "tcpclient.h"
 #include "datagenerationscheduler.h"
 #include "datavalidator.h"
+#include "tcpclient.h"
 
-class DeviceEmulator : public QObject
-{
-    Q_OBJECT
+namespace client {
 
-public:
-    explicit DeviceEmulator(QObject* parent = nullptr);
+class DeviceEmulator : public QObject {
+  Q_OBJECT
 
-    void start();
+ public:
+  explicit DeviceEmulator(QObject* parent = nullptr);
 
-private:
-    TcpClient* _tcpClient = nullptr;
+  void start();
 
-    DataGenerationScheduler*
-        _genScheduler = nullptr;
+ private:
+  TcpClient* tcp_client_ = nullptr;
 
-    DataValidator*
-        _dataValidator = nullptr;
+  DataGenerationScheduler* data_generation_scheduler_ = nullptr;
+
+  DataValidator* data_validator_ = nullptr;
 };
+
+}  // namespace client

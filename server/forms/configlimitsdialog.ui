@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>LimitsConfigDialog</class>
- <widget class="QDialog" name="LimitsConfigDialog">
+ <class>ConfigLimitsDialog</class>
+ <widget class="QDialog" name="ConfigLimitsDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -172,7 +172,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>LimitsConfigDialog</receiver>
+   <receiver>ConfigLimitsDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -188,7 +188,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>LimitsConfigDialog</receiver>
+   <receiver>ConfigLimitsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

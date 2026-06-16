@@ -2,29 +2,30 @@
 
 #include <QDialog>
 
-#include "../../shared/include/sharedtypes.h"
+#include "../../shared/include/types.h"
 
 namespace Ui {
-class LimitsConfigDialog;
+class ConfigLimitsDialog;
 }
 
-class ConfigLimitsDialog : public QDialog
-{
-    Q_OBJECT
+namespace server {
 
-public:
-    explicit ConfigLimitsDialog(
-        QWidget *parent = nullptr);
+class ConfigLimitsDialog : public QDialog {
+  Q_OBJECT
 
-    ~ConfigLimitsDialog();
+ public:
+  explicit ConfigLimitsDialog(QWidget *parent = nullptr);
 
-signals:
-    void limitsConfigSubmitted(
-        const sharedTypes::LimitsConfig& config);
+  ~ConfigLimitsDialog();
 
-protected:
-    void accept() override;
+ signals:
+  void limitsConfigSubmitted(const shared::types::LimitsConfig &config);
 
-private:
-    Ui::LimitsConfigDialog *ui;
+ protected:
+  void accept() override;
+
+ private:
+  Ui::ConfigLimitsDialog *ui;
 };
+
+}  // namespace server

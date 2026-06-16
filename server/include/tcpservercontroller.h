@@ -4,46 +4,41 @@
 #include <QObject>
 #include <QThread>
 
-#include "../../shared/include/sharedtypes.h"
-
-#include "../include/apptypes.h"
+#include "../../shared/include/types.h"
 #include "../include/tcpserver.h"
+#include "../include/types.h"
 
-class TcpServerController : public QObject
-{
-    Q_OBJECT
+namespace server {
 
-public:
-    explicit TcpServerController(
-        QObject* parent = nullptr);
+class TcpServerController : public QObject {
+  Q_OBJECT
 
-    ~TcpServerController();
+ public:
+  explicit TcpServerController(QObject* parent = nullptr);
 
-public slots:
-    void startClients();
+  ~TcpServerController();
 
-    void stopClients();
+ public slots:
+  void startClientsDataTransmission();
+  void stopClientsDataTransmission();
 
-    void applyLimitsConfig(
-        const sharedTypes::LimitsConfig& config);
+  void applyLimitsConfig(const shared::types::LimitsConfig& config);
 
-signals:
-    void serverStarted();
+ signals:
+  void serverStarted();
 
-    void clientConnectionStateChanged(
-        const appTypes::ClientInfo& info);
+  void clientConnectionStateChanged(const server::types::ClientInfo& info);
 
-    void clientsRunningStateChanged(
-        bool running);
+  void clientsTransmittingStateChanged(bool transmitting);
 
-    void eventOccurred(
-        const QString& event);
+  void clientDataReceived(const server::types::ClientData& data);
 
-    void clientDataReceived(
-        const appTypes::ClientData& data);
+  void eventOccurred(const QString& event);
 
-private:
-    QThread _server_thread;
+ private:
+  QThread server_thread_;
 
-    TcpServer* _tcp_server = nullptr;
+  TcpServer* tcp_server_ = nullptr;
 };
+
+}  // namespace server

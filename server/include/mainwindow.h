@@ -2,16 +2,15 @@
 
 #include <QDateTime>
 #include <QHash>
-#include <QVector>
 #include <QMainWindow>
 #include <QScrollBar>
 #include <QTimer>
+#include <QVector>
 
-#include "../include/apptypes.h"
-#include "../include/tcpservercontroller.h"
+#include "../../shared/include/types.h"
 #include "../include/configlimitsdialog.h"
-
-#include "../../shared/include/sharedtypes.h"
+#include "../include/tcpservercontroller.h"
+#include "../include/types.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,49 +18,49 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
-{
-    Q_OBJECT
+namespace server {
 
-public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+class MainWindow : public QMainWindow {
+  Q_OBJECT
 
-private:
-    static const QString START_TEXT;
-    static const QString STOP_TEXT;
+ public:
+  MainWindow(QWidget* parent = nullptr);
+  ~MainWindow();
 
-    Ui::MainWindow *ui;
+ private:
+  static constexpr auto start_transmission_text_ = "Начать передачу";
+  static constexpr auto stop_transmission_text_ = "Остановить передачу";
 
-    TcpServerController _tcp_server_controller;
+  Ui::MainWindow* ui;
 
-    QHash<QString, int> _client_info_rows;
+  TcpServerController tcp_server_controller_;
 
-    QTimer _update_timer;
+  QHash<QString, int> client_info_rows_;
 
-    QVector<appTypes::ClientData> _pending_data_rows;
+  QTimer table_update_timer_;
 
-    ConfigLimitsDialog* _config_limits_dialog = nullptr;
+  QVector<server::types::ClientData> pending_client_data_;
 
-private slots:
-    void onServerStarted();
+  ConfigLimitsDialog* config_limits_dialog_ = nullptr;
 
-    void onClientConnectionStateChanged(
-        const appTypes::ClientInfo& info);
+ private slots:
+  void onServerStarted();
 
-    void onClientsStartStopClicked();
+  void onClientConnectionStateChanged(const server::types::ClientInfo& info);
 
-    void onClientsRunningStateChanged(bool running);
+  void onStartStopTransmissionClicked();
 
-    void onEventOccured(const QString& event);
+  void onClientsTransmittingStateChanged(bool transmitting);
 
-    void onClientDataReceived(
-        const appTypes::ClientData& data);
+  void onEventOccured(const QString& event);
 
-    void addPendingRows();
+  void onClientDataReceived(const server::types::ClientData& data);
 
-    void onConfigLimitsClicked();
+  void addPendingRows();
 
-    void onLimitsConfigSubmitted(
-        const sharedTypes::LimitsConfig& config);
+  void onConfigLimitsClicked();
+
+  void onLimitsConfigSubmitted(const shared::types::LimitsConfig& config);
 };
+
+}  // namespace server

@@ -7,29 +7,30 @@
 
 #include "datagenerator.h"
 
-class DataGenerationScheduler : public QObject
-{
-    Q_OBJECT
+namespace client {
 
-public:
-    explicit DataGenerationScheduler(
-        QObject* parent = nullptr);
+class DataGenerationScheduler : public QObject {
+  Q_OBJECT
 
-    void start();
+ public:
+  explicit DataGenerationScheduler(QObject* parent = nullptr);
 
-    void stop();
+  void start();
 
-signals:
-    void dataGenerated(
-        const QJsonObject& object);
+  void stop();
 
-private:
-    QTimer generation_timer_;
+ signals:
+  void dataGenerated(const QJsonObject& object);
 
-    bool active_ = false;
+ private:
+  QTimer generation_timer_;
 
-    void scheduleNextGeneration();
+  bool active_ = false;
 
-private slots:
-    void generateRandomData();
+  void scheduleNextGeneration();
+
+ private slots:
+  void generateRandomData();
 };
+
+}  // namespace client

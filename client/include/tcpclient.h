@@ -1,63 +1,66 @@
 #pragma once
 
+#include <QDebug>
 #include <QHostAddress>
 #include <QJsonObject>
-#include <QDebug>
 #include <QObject>
 #include <QTcpSocket>
 #include <QTimer>
 
 #include "../../shared/include/protocol.h"
-#include "../../shared/include/sharedtypes.h"
+#include "../../shared/include/types.h"
 
-class TcpClient : public QObject
-{
-    Q_OBJECT
+namespace client {
 
-public:
-    explicit TcpClient(
-        QObject* parent = nullptr);
+class TcpClient : public QObject {
+  Q_OBJECT
 
-    void start();
+ public:
+  explicit TcpClient(QObject* parent = nullptr);
 
-    void sendData(
-        const QJsonObject& json);
+  void start();
 
-signals:
-    void startCommandReceived();
+ public slots:
+  void sendData(const QJsonObject& json);
 
-    void stopCommandReceived();
+ signals:
+  void startTransmissionCommandReceived();
 
-    void limitsConfigReceived(
-        sharedTypes::LimitsConfig& config);
+  void stopTransmissionCommandReceived();
 
-private slots:
-    void onConnected();
+  void limitsConfigReceived(shared::types::LimitsConfig& config);
 
-    void onDisconnected();
+ private:
+  static constexpr quint16 server_port_ = 12345;
 
-    void onReadyRead();
+  static constexpr auto server_address_ = "127.0.0.1";
 
-    void onErrorOccurred(
-        QAbstractSocket::SocketError);
+  static constexpr int reconnect_interval_ms_ = 5000;
 
-    void tryConnect();
+  QTcpSocket socket_;
 
-private:
-    QTcpSocket _socket;
+  QByteArray read_buffer_;
 
-    QByteArray _read_buffer;
+  QTimer reconnect_timer_;
 
-    QTimer _reconnect_timer;
+  void processMessage(const QByteArray& message);
 
-    void processMessage(
-        const QByteArray& message);
+  void handleJsonMessage(const QJsonObject& json);
 
-    void handleJsonMessage(
-        const QJsonObject& json);
+  void handleLimitsConfigMessage(const QJsonObject& json);
 
-    void handleLimitsConfigMessage(
-        const QJsonObject& json);
+  void scheduleReconnect();
 
-    void scheduleReconnect();
+ private slots:
+  void onConnected();
+
+  void onDisconnected();
+
+  void onReadyRead();
+
+  void tryConnect();
+
+  void onErrorOccurred(QAbstractSocket::SocketError error);
 };
+
+}  // namespace client
