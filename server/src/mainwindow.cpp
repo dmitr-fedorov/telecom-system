@@ -176,10 +176,16 @@ void MainWindow::addPendingClientData() {
   }
 }
 
-void MainWindow::onConfigLimitsClicked() { config_limits_dialog_->exec(); }
+void MainWindow::onConfigLimitsClicked() {
+  config_limits_dialog_->setConfig(last_applied_limits_config_);
+
+  config_limits_dialog_->exec();
+}
 
 void MainWindow::onLimitsConfigSubmitted(
     const shared::types::LimitsConfig& config) {
+  last_applied_limits_config_ = config;
+
   tcp_server_controller_.applyLimitsConfig(config);
 }
 

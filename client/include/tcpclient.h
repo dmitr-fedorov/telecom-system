@@ -36,6 +36,8 @@ class TcpClient : public QObject {
 
   void limitsConfigReceived(shared::types::LimitsConfig& config);
 
+  void disconnected();
+
  private:
   static constexpr quint16 server_port_ = 12345;
 

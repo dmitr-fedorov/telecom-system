@@ -19,6 +19,8 @@ class ConfigLimitsDialog : public QDialog {
 
   ~ConfigLimitsDialog();
 
+  void setConfig(const shared::types::LimitsConfig &config);
+
  signals:
   void limitsConfigSubmitted(const shared::types::LimitsConfig &config);
 

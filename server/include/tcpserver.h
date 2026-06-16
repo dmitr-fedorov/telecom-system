@@ -62,7 +62,7 @@ class TcpServer : public QObject {
 
   uint64_t id_counter_ = 0;
 
-  shared::types::LimitsConfig last_limits_config_;
+  shared::types::LimitsConfig last_applied_limits_config_;
 
   QString getNewClientId();
 

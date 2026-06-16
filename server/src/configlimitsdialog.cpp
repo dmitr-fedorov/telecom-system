@@ -31,6 +31,20 @@ ConfigLimitsDialog::ConfigLimitsDialog(QWidget *parent)
 
 ConfigLimitsDialog::~ConfigLimitsDialog() { delete ui; }
 
+void ConfigLimitsDialog::setConfig(const shared::types::LimitsConfig &config) {
+  ui->cb_latency->setChecked(config.latency.has_value());
+  ui->dsb_latency->setValue(config.latency.value_or(0.0));
+
+  ui->cb_errors->setChecked(config.errors.has_value());
+  ui->sb_errors->setValue(config.errors.value_or(0));
+
+  ui->cb_cpu_usage->setChecked(config.cpu_usage.has_value());
+  ui->sb_cpu_usage->setValue(config.cpu_usage.value_or(0));
+
+  ui->cb_temperature->setChecked(config.temperature.has_value());
+  ui->dsb_temperature->setValue(config.temperature.value_or(0.0));
+}
+
 void ConfigLimitsDialog::accept() {
   shared::types::LimitsConfig config;
 

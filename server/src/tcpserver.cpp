@@ -92,7 +92,7 @@ void TcpServer::stopClientsDataTransmission() {
 }
 
 void TcpServer::applyLimitsConfig(const shared::types::LimitsConfig& config) {
-  last_limits_config_ = config;
+  last_applied_limits_config_ = config;
 
   auto configJson = toJson(config);
 
@@ -306,7 +306,7 @@ void TcpServer::sendStartCommand(QTcpSocket* socket, const QString& client_id) {
 
 void TcpServer::sendLastLimitsConfig(QTcpSocket* socket,
                                      const QString& client_id) {
-  auto json = toJson(last_limits_config_);
+  auto json = toJson(last_applied_limits_config_);
 
   if (!sendMessage(socket, json)) {
     emit eventOccurred(QString("Не удалось отправить "

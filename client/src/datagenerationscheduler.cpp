@@ -18,9 +18,15 @@ void DataGenerationScheduler::start() {
   active_ = true;
 
   scheduleNextGeneration();
+
+  qInfo() << "Генерация данных начата";
 }
 
 void DataGenerationScheduler::stop() {
+  if (active_) {
+    qInfo() << "Генерация данных остановлена";
+  }
+
   active_ = false;
 
   generation_timer_.stop();

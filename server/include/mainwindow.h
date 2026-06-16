@@ -44,6 +44,8 @@ class MainWindow : public QMainWindow {
 
   QVector<server::types::ClientData> pending_client_data_;
 
+  shared::types::LimitsConfig last_applied_limits_config_;
+
   ConfigLimitsDialog* config_limits_dialog_ = nullptr;
 
  private slots:

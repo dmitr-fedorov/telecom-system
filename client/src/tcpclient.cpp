@@ -50,6 +50,8 @@ void TcpClient::onDisconnected() {
   qInfo().nospace() << "Отключено от сервера: " << server_address_ << ':'
                     << server_port_;
 
+  emit disconnected();
+
   scheduleReconnect();
 }
 
