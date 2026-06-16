@@ -277,14 +277,16 @@ void TcpServer::sendAck(QTcpSocket* socket, const QString& client_id) {
   json[shared::protocol::k_type] = shared::protocol::k_ack;
   json[shared::protocol::k_client_id] = client_id;
 
-  if (sendMessage(socket, json)) {
-    emit eventOccurred(
-        QString("Connection Ack отправлен клиенту %1").arg(client_id));
-  } else {
+  if (!sendMessage(socket, json)) {
     emit eventOccurred(QString("Не удалось отправить "
                                "Connection Ack клиенту %1")
                            .arg(client_id));
+
+    return;
   }
+
+  emit eventOccurred(
+      QString("Connection Ack отправлен клиенту %1").arg(client_id));
 }
 
 void TcpServer::sendStartCommand(QTcpSocket* socket, const QString& client_id) {
@@ -292,13 +294,14 @@ void TcpServer::sendStartCommand(QTcpSocket* socket, const QString& client_id) {
   json[shared::protocol::k_type] = shared::protocol::k_start_transmission;
 
   if (!sendMessage(socket, json)) {
-    emit eventOccurred(QString("Не удалось начать отправку "
-                               "данных клиентом %1")
+    emit eventOccurred(QString("Не удалось отправить команду "
+                               "на начало отправки данных клиенту %1")
                            .arg(client_id));
   }
 
   emit eventOccurred(
-      QString("Передача данных клиентом %1 начата").arg(client_id));
+      QString("Команда на начало отправки данных отправлена клиенту %1")
+          .arg(client_id));
 }
 
 void TcpServer::sendLastLimitsConfig(QTcpSocket* socket,

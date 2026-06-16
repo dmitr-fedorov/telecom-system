@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget* parent)
           &MainWindow::onServerStarted);
 
   connect(&table_update_timer_, &QTimer::timeout, this,
-          &MainWindow::addPendingRows);
+          &MainWindow::addPendingClientData);
 
   table_update_timer_.start(300);
 }
@@ -132,7 +132,7 @@ void MainWindow::onClientDataReceived(const server::types::ClientData& data) {
   pending_client_data_.push_back(data);
 }
 
-void MainWindow::addPendingRows() {
+void MainWindow::addPendingClientData() {
   if (pending_client_data_.isEmpty()) {
     return;
   }

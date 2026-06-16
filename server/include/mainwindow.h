@@ -56,7 +56,7 @@ class MainWindow : public QMainWindow {
 
   void onClientDataReceived(const server::types::ClientData& data);
 
-  void addPendingRows();
+  void addPendingClientData();
 
   void onConfigLimitsClicked();
 
