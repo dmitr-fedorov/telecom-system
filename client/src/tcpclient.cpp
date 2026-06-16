@@ -121,7 +121,7 @@ void TcpClient::handleJsonMessage(const QJsonObject& json) {
     }
 
     qInfo() << "Получено подтверждение соединения."
-            << "Назначен id:" << client_id;
+            << "Назначенный id:" << client_id;
 
     return;
   }

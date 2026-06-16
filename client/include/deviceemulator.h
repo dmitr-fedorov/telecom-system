@@ -8,6 +8,8 @@
 
 namespace client {
 
+// Агрегирует компоненты приложения.
+// Инициирует процесс работы клиента.
 class DeviceEmulator : public QObject {
   Q_OBJECT
 

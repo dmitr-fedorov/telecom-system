@@ -9,6 +9,11 @@
 
 namespace client {
 
+// Генерирует случайные данные
+// по таймеру со случайной задержкой от 0.01 до 0.1 секунд.
+// Испускает сигнал со сгенерированными данными.
+// Типы генерируемых данных: NetworkMetrics, DeviceStatus, Log.
+// Размер генерируемых данных: Short, Medium, Long.
 class DataGenerationScheduler : public QObject {
   Q_OBJECT
 

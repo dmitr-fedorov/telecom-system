@@ -120,7 +120,7 @@ void TcpServer::onNewConnection() {
     server::types::ClientInfo info;
     info.client_id = client_id;
     info.ip_address = socket->peerAddress().toString();
-    info.state = "Подключен";
+    info.state = QStringLiteral("Подключен");
 
     emit clientConnectionStateChanged(info);
 
@@ -152,7 +152,7 @@ void TcpServer::onClientDisconnected() {
   server::types::ClientInfo info;
   info.client_id = it->client_id;
   info.ip_address = socket->peerAddress().toString();
-  info.state = "Отключен";
+  info.state = QStringLiteral("Отключен");
 
   emit clientConnectionStateChanged(info);
 

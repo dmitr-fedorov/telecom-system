@@ -10,6 +10,8 @@
 
 namespace server {
 
+// Содержит TcpServer, запускает его в отдельном потоке и корректно его удаляет.
+// Является посредником между TcpServer и GUI.
 class TcpServerController : public QObject {
   Q_OBJECT
 

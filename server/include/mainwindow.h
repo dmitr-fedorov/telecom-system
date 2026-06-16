@@ -20,6 +20,9 @@ QT_END_NAMESPACE
 
 namespace server {
 
+// Управляет интерфейсом главного окна.
+// Инициирует операции TcpServerController,
+// отображает полученные от него данные.
 class MainWindow : public QMainWindow {
   Q_OBJECT
 
@@ -54,8 +57,11 @@ class MainWindow : public QMainWindow {
 
   void onEventOccured(const QString& event);
 
+  // Помещает полученные данные во временное хранилище
   void onClientDataReceived(const server::types::ClientData& data);
 
+  // Заносит полученные данные из временного хранилища
+  // в таблицу по срабатыванию таймера для повышения производительности
   void addPendingClientData();
 
   void onConfigLimitsClicked();

@@ -3,11 +3,11 @@
 namespace client {
 
 QJsonObject DataGenerator::GenerateRandomData() {
-  const auto message_type = QRandomGenerator::global()->bounded(3);
+  const auto data_type = QRandomGenerator::global()->bounded(3);
 
   QJsonObject result;
 
-  switch (message_type) {
+  switch (data_type) {
     case 0: {
       result = GenerateNetworkMetrics();
 
@@ -31,7 +31,7 @@ QJsonObject DataGenerator::GenerateRandomData() {
 }
 
 QJsonObject DataGenerator::GenerateNetworkMetrics() {
-  const MessageSize size = GenerateMessageSize();
+  const DataSize size = GenerateDataSize();
 
   QJsonObject result;
 
@@ -39,7 +39,7 @@ QJsonObject DataGenerator::GenerateNetworkMetrics() {
 
   result[shared::protocol::k_bandwidth] = RandomDouble(10.0, 1000.0);
 
-  if (size >= MessageSize::Medium) {
+  if (size >= DataSize::Medium) {
     result[shared::protocol::k_latency] = RandomDouble(1.0, 150.0);
 
     result[shared::protocol::k_packet_loss] = RandomDouble(0.0, 5.0);
@@ -47,7 +47,7 @@ QJsonObject DataGenerator::GenerateNetworkMetrics() {
     result[shared::protocol::k_signal_strength] = RandomDouble(40.0, 100.0);
   }
 
-  if (size == MessageSize::Long) {
+  if (size == DataSize::Long) {
     result[shared::protocol::k_mtu] = RandomDouble(576.0, 9000.0);
 
     result[shared::protocol::k_rtt] = RandomDouble(10.0, 900000.0);
@@ -74,7 +74,7 @@ QJsonObject DataGenerator::GenerateNetworkMetrics() {
 }
 
 QJsonObject DataGenerator::GenerateDeviceStatus() {
-  const MessageSize size = GenerateMessageSize();
+  const DataSize size = GenerateDataSize();
 
   QJsonObject result;
 
@@ -83,7 +83,7 @@ QJsonObject DataGenerator::GenerateDeviceStatus() {
   result[shared::protocol::k_uptime] =
       QRandomGenerator::global()->bounded(1000, 1000000);
 
-  if (size >= MessageSize::Medium) {
+  if (size >= DataSize::Medium) {
     result[shared::protocol::k_cpu_usage] =
         QRandomGenerator::global()->bounded(0, 100);
 
@@ -93,7 +93,7 @@ QJsonObject DataGenerator::GenerateDeviceStatus() {
     result[shared::protocol::k_temperature] = RandomDouble(25.0, 100.0);
   }
 
-  if (size == MessageSize::Long) {
+  if (size == DataSize::Long) {
     result[shared::protocol::k_system_up_time] = RandomDouble(1.0, 10000.0);
 
     result[shared::protocol::k_power_supply] =
@@ -119,7 +119,7 @@ QJsonObject DataGenerator::GenerateDeviceStatus() {
 }
 
 QJsonObject DataGenerator::GenerateLog() {
-  const MessageSize size = GenerateMessageSize();
+  const DataSize size = GenerateDataSize();
 
   QJsonObject result;
 
@@ -132,26 +132,26 @@ QJsonObject DataGenerator::GenerateLog() {
   return result;
 }
 
-DataGenerator::MessageSize DataGenerator::GenerateMessageSize() {
+DataGenerator::DataSize DataGenerator::GenerateDataSize() {
   const int value = QRandomGenerator::global()->bounded(3);
 
   if (value == 0) {
-    return MessageSize::Short;
+    return DataSize::Short;
   }
 
   if (value == 1) {
-    return MessageSize::Medium;
+    return DataSize::Medium;
   }
 
-  return MessageSize::Long;
+  return DataSize::Long;
 }
 
-QString DataGenerator::GenerateLogText(MessageSize size) {
-  if (size == MessageSize::Short) {
+QString DataGenerator::GenerateLogText(DataSize size) {
+  if (size == DataSize::Short) {
     return "Connection restarted";
   }
 
-  if (size == MessageSize::Medium) {
+  if (size == DataSize::Medium) {
     return "Temporary communication issue detected "
            "during data synchronization. "
            "Recovery completed successfully.";

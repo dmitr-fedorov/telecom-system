@@ -14,6 +14,10 @@
 
 namespace server {
 
+// Реализует сетевую часть работы сервера.
+// Управляет соденинениями, уведомляет о сетевых событиях,
+// Получает данные от клиентов и отправляет данные им.
+// Испускает сигналы с полученными данными в формате, готовом для отображения.
 class TcpServer : public QObject {
   Q_OBJECT
 
@@ -51,6 +55,7 @@ class TcpServer : public QObject {
 
   QTcpServer* server_ = nullptr;
 
+  // QHash вместо QList или QMap для сложности поиска O(1)
   QHash<QTcpSocket*, ClientContext> clients_;
 
   bool is_clients_running_ = false;

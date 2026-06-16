@@ -10,6 +10,7 @@ class ConfigLimitsDialog;
 
 namespace server {
 
+// Окно для настройки лимитов значений, принимаемых от клиентов
 class ConfigLimitsDialog : public QDialog {
   Q_OBJECT
 
