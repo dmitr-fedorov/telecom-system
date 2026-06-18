@@ -49,11 +49,15 @@ void TcpClient::onDisconnected() {
 void TcpClient::onReadyRead() {
   read_buffer_.append(socket_->readAll());
 
-  while (read_buffer_.contains(shared::protocol::tcp_packet_delimeter)) {
+  while (true) {
     const int delimiter_index =
         read_buffer_.indexOf(shared::protocol::tcp_packet_delimeter);
 
-    const QByteArray message = read_buffer_.left(delimiter_index);
+    if (delimiter_index == -1) {
+      break;
+    }
+
+    const auto message = read_buffer_.left(delimiter_index);
 
     read_buffer_.remove(0, delimiter_index + 1);
 

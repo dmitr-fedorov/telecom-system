@@ -64,23 +64,24 @@ class TcpServer : public QObject {
 
   shared::types::LimitsConfig last_applied_limits_config_;
 
-  QString getNewClientId();
-
-  bool sendMessage(QTcpSocket* socket, const QJsonObject& json);
-
-  bool broadcastMessage(const QJsonObject& json);
-
   void sendAck(QTcpSocket* socket, const QString& client_id);
 
   void sendStartCommand(QTcpSocket* socket, const QString& client_id);
 
   void sendLastLimitsConfig(QTcpSocket* socket, const QString& client_id);
 
-  QJsonObject toJson(const shared::types::LimitsConfig& config);
+  bool broadcastMessage(const QJsonObject& json);
+
+  bool sendMessage(QTcpSocket* socket, const QJsonObject& json,
+                   const QString& client_id);
 
   void processMessage(const QByteArray& message, const QString& client_id);
 
+  QJsonObject toJson(const shared::types::LimitsConfig& config);
+
   QString formatContent(const QString& type, const QJsonObject& json);
+
+  QString getNewClientId();
 
  private slots:
   void onNewConnection();

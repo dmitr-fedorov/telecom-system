@@ -39,8 +39,8 @@ void TcpServer::stopServer() {
   for (auto it = clients_.begin(); it != clients_.end(); ++it) {
     auto* socket = it.key();
 
-    socket->disconnectFromHost();
     socket->disconnect(this);
+    socket->disconnectFromHost();
     socket->deleteLater();
   }
 
@@ -55,7 +55,7 @@ void TcpServer::stopServer() {
 
 void TcpServer::startClientsDataTransmission() {
   if (is_clients_running_) {
-    emit eventOccurred("Ошибка: Передача данных клиентами уже начата");
+    emit eventOccurred("Ошибка: Передача данных клиентами уже активна");
 
     return;
   }
@@ -99,6 +99,184 @@ void TcpServer::applyLimitsConfig(const shared::types::LimitsConfig& config) {
   broadcastMessage(configJson);
 
   emit eventOccurred("Конфигурация лимитов применена");
+}
+
+void TcpServer::sendAck(QTcpSocket* socket, const QString& client_id) {
+  QJsonObject json;
+  json[shared::protocol::k_type] = shared::protocol::k_ack;
+  json[shared::protocol::k_client_id] = client_id;
+
+  if (!sendMessage(socket, json, client_id)) {
+    emit eventOccurred(QString("Ошибка: Не удалось отправить "
+                               "Connection Ack клиенту %1")
+                           .arg(client_id));
+
+    return;
+  }
+
+  emit eventOccurred(
+      QString("Connection Ack отправлен клиенту %1").arg(client_id));
+}
+
+void TcpServer::sendStartCommand(QTcpSocket* socket, const QString& client_id) {
+  QJsonObject json;
+  json[shared::protocol::k_type] = shared::protocol::k_start_transmission;
+
+  if (!sendMessage(socket, json, client_id)) {
+    emit eventOccurred(QString("Ошибка: Не удалось отправить команду "
+                               "на начало отправки данных клиенту %1")
+                           .arg(client_id));
+
+    return;
+  }
+
+  emit eventOccurred(
+      QString("Команда на начало отправки данных отправлена клиенту %1")
+          .arg(client_id));
+}
+
+void TcpServer::sendLastLimitsConfig(QTcpSocket* socket,
+                                     const QString& client_id) {
+  auto json = toJson(last_applied_limits_config_);
+
+  if (!sendMessage(socket, json, client_id)) {
+    emit eventOccurred(QString("Ошибка: Не удалось отправить "
+                               "конфигурацию лимитов клиенту %1")
+                           .arg(client_id));
+
+    return;
+  }
+
+  emit eventOccurred(QString("Конфигурация лимитов "
+                             "отправлена клиенту %1")
+                         .arg(client_id));
+}
+
+bool TcpServer::broadcastMessage(const QJsonObject& json) {
+  bool success = false;
+
+  if (clients_.empty()) {
+    emit eventOccurred("Нет подключенных клиентов");
+
+    return success;
+  }
+
+  for (auto it = clients_.begin(); it != clients_.end(); ++it) {
+    if (sendMessage(it.key(), json, it->client_id)) {
+      success = true;
+    }
+  }
+
+  if (!success) {
+    emit eventOccurred(
+        "Ошибка: Не удалось отправить сообщение ни одному клиенту");
+  }
+
+  return success;
+}
+
+bool TcpServer::sendMessage(QTcpSocket* socket, const QJsonObject& json,
+                            const QString& client_id) {
+  if (socket == nullptr) {
+    emit eventOccurred("Ошибка: попытка отправить сообщение в null socket");
+
+    return false;
+  }
+
+  if (socket->state() != QAbstractSocket::ConnectedState) {
+    emit eventOccurred(
+        QString("Ошибка: клиент %1 не подключен").arg(client_id));
+
+    return false;
+  }
+
+  const auto data = shared::protocol::Serialize(json);
+
+  const qint64 written = socket->write(data);
+
+  if (written == -1) {
+    emit eventOccurred(QString("Ошибка отправки клиенту %1: %2")
+                           .arg(client_id, socket->errorString()));
+
+    return false;
+  }
+
+  return true;
+}
+
+void TcpServer::processMessage(const QByteArray& message,
+                               const QString& client_id) {
+  QJsonObject json;
+
+  if (!shared::protocol::Deserialize(message, &json)) {
+    emit eventOccurred(QString("Ошибка: не удалось разобрать "
+                               "JSON сообщение от клиента %1")
+                           .arg(client_id));
+
+    return;
+  }
+
+  const auto type = json.take(shared::protocol::k_type).toString();
+
+  if (type.isEmpty()) {
+    emit eventOccurred(QString("Ошибка: клиент %1 прислал JSON "
+                               "без валидного поля type")
+                           .arg(client_id));
+
+    return;
+  }
+
+  server::types::ClientData data;
+  data.client_id = client_id;
+  data.type = type;
+  data.content = formatContent(type, json);
+  data.timestamp = QDateTime::currentDateTime();
+
+  emit clientDataReceived(data);
+}
+
+QJsonObject TcpServer::toJson(const shared::types::LimitsConfig& config) {
+  QJsonObject result;
+  result[shared::protocol::k_type] = shared::protocol::k_limits_config;
+
+  if (config.latency.has_value()) {
+    result[shared::protocol::k_latency] = config.latency.value();
+  }
+
+  if (config.errors.has_value()) {
+    result[shared::protocol::k_errors] = config.errors.value();
+  }
+
+  if (config.cpu_usage.has_value()) {
+    result[shared::protocol::k_cpu_usage] = config.cpu_usage.value();
+  }
+
+  if (config.temperature.has_value()) {
+    result[shared::protocol::k_temperature] = config.temperature.value();
+  }
+
+  return result;
+}
+
+QString TcpServer::formatContent(const QString& type, const QJsonObject& json) {
+  if (type == shared::protocol::k_log) {
+    return QString("[%1] %2").arg(
+        json.value(shared::protocol::k_severity).toString(),
+        json.value(shared::protocol::k_message).toString());
+  }
+
+  QStringList parts;
+
+  for (auto it = json.begin(); it != json.end(); ++it) {
+    parts.append(
+        QString("%1=%2").arg(it.key(), it.value().toVariant().toString()));
+  }
+
+  return parts.join(", ");
+}
+
+QString TcpServer::getNewClientId() {
+  return QString("client_%1").arg(++id_counter_);
 }
 
 void TcpServer::onNewConnection() {
@@ -214,182 +392,6 @@ void TcpServer::onSocketError(QAbstractSocket::SocketError error) {
 
   emit eventOccurred(QString("Ошибка клиента %1: %2")
                          .arg(it->client_id, socket->errorString()));
-}
-
-QString TcpServer::getNewClientId() {
-  return QString("client_%1").arg(++id_counter_);
-}
-
-bool TcpServer::sendMessage(QTcpSocket* socket, const QJsonObject& json) {
-  if (socket == nullptr) {
-    emit eventOccurred("Ошибка: попытка отправить сообщение в null socket");
-
-    return false;
-  }
-
-  auto it = clients_.find(socket);
-
-  if (it == clients_.end()) {
-    emit eventOccurred("Ошибка: сокет отсутствует в списке клиентов");
-
-    return false;
-  }
-
-  if (socket->state() != QAbstractSocket::ConnectedState) {
-    emit eventOccurred(
-        QString("Ошибка: клиент %1 не подключен").arg(it->client_id));
-
-    return false;
-  }
-
-  const auto data = shared::protocol::Serialize(json);
-
-  const qint64 written = socket->write(data);
-
-  if (written == -1) {
-    emit eventOccurred(QString("Ошибка отправки клиенту %1: %2")
-                           .arg(it->client_id, socket->errorString()));
-
-    return false;
-  }
-
-  return true;
-}
-
-bool TcpServer::broadcastMessage(const QJsonObject& json) {
-  bool success = false;
-
-  for (auto it = clients_.begin(); it != clients_.end(); ++it) {
-    if (sendMessage(it.key(), json)) {
-      success = true;
-    }
-  }
-
-  if (!success) {
-    emit eventOccurred("Не удалось отправить сообщение ни одному клиенту");
-  }
-
-  return success;
-}
-
-void TcpServer::sendAck(QTcpSocket* socket, const QString& client_id) {
-  QJsonObject json;
-  json[shared::protocol::k_type] = shared::protocol::k_ack;
-  json[shared::protocol::k_client_id] = client_id;
-
-  if (!sendMessage(socket, json)) {
-    emit eventOccurred(QString("Не удалось отправить "
-                               "Connection Ack клиенту %1")
-                           .arg(client_id));
-
-    return;
-  }
-
-  emit eventOccurred(
-      QString("Connection Ack отправлен клиенту %1").arg(client_id));
-}
-
-void TcpServer::sendStartCommand(QTcpSocket* socket, const QString& client_id) {
-  QJsonObject json;
-  json[shared::protocol::k_type] = shared::protocol::k_start_transmission;
-
-  if (!sendMessage(socket, json)) {
-    emit eventOccurred(QString("Не удалось отправить команду "
-                               "на начало отправки данных клиенту %1")
-                           .arg(client_id));
-  }
-
-  emit eventOccurred(
-      QString("Команда на начало отправки данных отправлена клиенту %1")
-          .arg(client_id));
-}
-
-void TcpServer::sendLastLimitsConfig(QTcpSocket* socket,
-                                     const QString& client_id) {
-  auto json = toJson(last_applied_limits_config_);
-
-  if (!sendMessage(socket, json)) {
-    emit eventOccurred(QString("Не удалось отправить "
-                               "конфигурацию лимитов клиенту %1")
-                           .arg(client_id));
-
-    return;
-  }
-
-  emit eventOccurred(QString("Конфигурация лимитов "
-                             "отправлена клиенту %1")
-                         .arg(client_id));
-}
-
-QJsonObject TcpServer::toJson(const shared::types::LimitsConfig& config) {
-  QJsonObject result;
-  result[shared::protocol::k_type] = shared::protocol::k_limits_config;
-
-  if (config.latency.has_value()) {
-    result[shared::protocol::k_latency] = config.latency.value();
-  }
-
-  if (config.errors.has_value()) {
-    result[shared::protocol::k_errors] = config.errors.value();
-  }
-
-  if (config.cpu_usage.has_value()) {
-    result[shared::protocol::k_cpu_usage] = config.cpu_usage.value();
-  }
-
-  if (config.temperature.has_value()) {
-    result[shared::protocol::k_temperature] = config.temperature.value();
-  }
-
-  return result;
-}
-
-void TcpServer::processMessage(const QByteArray& message,
-                               const QString& client_id) {
-  QJsonObject json;
-
-  if (!shared::protocol::Deserialize(message, &json)) {
-    emit eventOccurred(QString("Ошибка: не удалось разобрать "
-                               "JSON сообщение от клиента %1")
-                           .arg(client_id));
-
-    return;
-  }
-
-  const auto type = json.take(shared::protocol::k_type).toString();
-
-  if (type.isEmpty()) {
-    emit eventOccurred(QString("Ошибка: клиент %1 прислал JSON "
-                               "без поля type")
-                           .arg(client_id));
-
-    return;
-  }
-
-  server::types::ClientData data;
-  data.client_id = client_id;
-  data.type = type;
-  data.content = formatContent(type, json);
-  data.timestamp = QDateTime::currentDateTime();
-
-  emit clientDataReceived(data);
-}
-
-QString TcpServer::formatContent(const QString& type, const QJsonObject& json) {
-  if (type == shared::protocol::k_log) {
-    return QString("[%1] %2").arg(
-        json.value(shared::protocol::k_severity).toString(),
-        json.value(shared::protocol::k_message).toString());
-  }
-
-  QStringList parts;
-
-  for (auto it = json.begin(); it != json.end(); ++it) {
-    parts.append(
-        QString("%1=%2").arg(it.key(), it.value().toVariant().toString()));
-  }
-
-  return parts.join(", ");
 }
 
 }  // namespace server
