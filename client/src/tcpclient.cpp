@@ -3,15 +3,7 @@
 namespace client {
 
 TcpClient::TcpClient(QObject* parent) : QObject(parent) {
-  connect(&socket_, &QTcpSocket::connected, this, &TcpClient::onConnected);
-
-  connect(&socket_, &QTcpSocket::disconnected, this,
-          &TcpClient::onDisconnected);
-
-  connect(&socket_, &QTcpSocket::readyRead, this, &TcpClient::onReadyRead);
-
-  connect(&socket_, &QTcpSocket::errorOccurred, this,
-          &TcpClient::onErrorOccurred);
+  initializeSocket();
 
   reconnect_timer_.setInterval(reconnect_interval_ms_);
   reconnect_timer_.setSingleShot(true);
@@ -22,7 +14,7 @@ TcpClient::TcpClient(QObject* parent) : QObject(parent) {
 void TcpClient::start() { tryConnect(); }
 
 void TcpClient::sendData(const QJsonObject& json) {
-  if (socket_.state() != QAbstractSocket::ConnectedState) {
+  if (!socket_ || socket_->state() != QAbstractSocket::ConnectedState) {
     qWarning() << "Ошибка: попытка отправить данные "
                   "без подключения к серверу";
 
@@ -30,12 +22,11 @@ void TcpClient::sendData(const QJsonObject& json) {
   }
 
   const auto data = shared::protocol::Serialize(json);
-
-  const qint64 written = socket_.write(data);
+  const qint64 written = socket_->write(data);
 
   if (written == -1) {
     qWarning() << "Ошибка: не удалось отправить данные:"
-               << socket_.errorString();
+               << socket_->errorString();
 
     return;
   }
@@ -52,11 +43,11 @@ void TcpClient::onDisconnected() {
 
   emit disconnected();
 
-  scheduleReconnect();
+  resetSocketAndScheduleReconnect();
 }
 
 void TcpClient::onReadyRead() {
-  read_buffer_.append(socket_.readAll());
+  read_buffer_.append(socket_->readAll());
 
   while (read_buffer_.contains(shared::protocol::tcp_packet_delimeter)) {
     const int delimiter_index =
@@ -71,23 +62,23 @@ void TcpClient::onReadyRead() {
 }
 
 void TcpClient::tryConnect() {
-  if (socket_.state() != QAbstractSocket::UnconnectedState) {
+  if (!socket_ || socket_->state() != QAbstractSocket::UnconnectedState) {
     return;
   }
 
   qInfo().nospace() << "Подключение к серверу: " << server_address_ << ':'
                     << server_port_ << "...";
 
-  socket_.connectToHost(server_address_, server_port_);
+  socket_->connectToHost(server_address_, server_port_);
 }
 
 void TcpClient::onErrorOccurred(QAbstractSocket::SocketError error) {
   Q_UNUSED(error);
 
-  qWarning() << "Ошибка сокета:" << socket_.errorString();
+  qWarning() << "Ошибка сокета:" << socket_->errorString();
 
-  if (socket_.state() != QAbstractSocket::ConnectedState) {
-    scheduleReconnect();
+  if (socket_->state() != QAbstractSocket::ConnectedState) {
+    resetSocketAndScheduleReconnect();
   }
 }
 
@@ -187,6 +178,33 @@ void TcpClient::handleLimitsConfigMessage(const QJsonObject& json) {
   }
 
   emit limitsConfigReceived(config);
+}
+
+void TcpClient::resetSocketAndScheduleReconnect() {
+  read_buffer_.clear();
+
+  if (socket_) {
+    socket_->disconnect(this);
+    socket_->deleteLater();
+    socket_ = nullptr;
+  }
+
+  initializeSocket();
+
+  scheduleReconnect();
+}
+
+void TcpClient::initializeSocket() {
+  socket_ = new QTcpSocket(this);
+
+  connect(socket_, &QTcpSocket::connected, this, &TcpClient::onConnected);
+
+  connect(socket_, &QTcpSocket::disconnected, this, &TcpClient::onDisconnected);
+
+  connect(socket_, &QTcpSocket::readyRead, this, &TcpClient::onReadyRead);
+
+  connect(socket_, &QTcpSocket::errorOccurred, this,
+          &TcpClient::onErrorOccurred);
 }
 
 void TcpClient::scheduleReconnect() {

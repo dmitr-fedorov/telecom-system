@@ -45,7 +45,7 @@ class TcpClient : public QObject {
 
   static constexpr int reconnect_interval_ms_ = 5000;
 
-  QTcpSocket socket_;
+  QTcpSocket* socket_ = nullptr;
 
   QByteArray read_buffer_;
 
@@ -56,6 +56,10 @@ class TcpClient : public QObject {
   void handleJsonMessage(const QJsonObject& json);
 
   void handleLimitsConfigMessage(const QJsonObject& json);
+
+  void resetSocketAndScheduleReconnect();
+
+  void initializeSocket();
 
   void scheduleReconnect();
 
