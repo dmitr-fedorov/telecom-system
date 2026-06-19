@@ -32,60 +32,6 @@ void TcpClient::sendData(const QJsonObject& json) {
   }
 }
 
-void TcpClient::onConnected() {
-  qInfo().nospace() << "Подключено к серверу: " << server_address_ << ':'
-                    << server_port_;
-}
-
-void TcpClient::onDisconnected() {
-  qInfo().nospace() << "Отключено от сервера: " << server_address_ << ':'
-                    << server_port_;
-
-  emit disconnected();
-
-  resetSocketAndScheduleReconnect();
-}
-
-void TcpClient::onReadyRead() {
-  read_buffer_.append(socket_->readAll());
-
-  while (true) {
-    const int delimiter_index =
-        read_buffer_.indexOf(shared::protocol::tcp_packet_delimeter);
-
-    if (delimiter_index == -1) {
-      break;
-    }
-
-    const auto message = read_buffer_.left(delimiter_index);
-
-    read_buffer_.remove(0, delimiter_index + 1);
-
-    processMessage(message);
-  }
-}
-
-void TcpClient::tryConnect() {
-  if (!socket_ || socket_->state() != QAbstractSocket::UnconnectedState) {
-    return;
-  }
-
-  qInfo().nospace() << "Подключение к серверу: " << server_address_ << ':'
-                    << server_port_ << "...";
-
-  socket_->connectToHost(server_address_, server_port_);
-}
-
-void TcpClient::onErrorOccurred(QAbstractSocket::SocketError error) {
-  Q_UNUSED(error);
-
-  qWarning() << "Ошибка сокета:" << socket_->errorString();
-
-  if (socket_->state() != QAbstractSocket::ConnectedState) {
-    resetSocketAndScheduleReconnect();
-  }
-}
-
 void TcpClient::processMessage(const QByteArray& message) {
   QJsonObject json;
 
@@ -221,6 +167,60 @@ void TcpClient::scheduleReconnect() {
           << reconnect_interval_ms_ << "мс";
 
   reconnect_timer_.start();
+}
+
+void TcpClient::onConnected() {
+  qInfo().nospace() << "Подключено к серверу: " << server_address_ << ':'
+                    << server_port_;
+}
+
+void TcpClient::onDisconnected() {
+  qInfo().nospace() << "Отключено от сервера: " << server_address_ << ':'
+                    << server_port_;
+
+  emit disconnected();
+
+  resetSocketAndScheduleReconnect();
+}
+
+void TcpClient::onReadyRead() {
+  read_buffer_.append(socket_->readAll());
+
+  while (true) {
+    const int delimiter_index =
+        read_buffer_.indexOf(shared::protocol::tcp_packet_delimeter);
+
+    if (delimiter_index == -1) {
+      break;
+    }
+
+    const auto message = read_buffer_.left(delimiter_index);
+
+    read_buffer_.remove(0, delimiter_index + 1);
+
+    processMessage(message);
+  }
+}
+
+void TcpClient::tryConnect() {
+  if (!socket_ || socket_->state() != QAbstractSocket::UnconnectedState) {
+    return;
+  }
+
+  qInfo().nospace() << "Подключение к серверу: " << server_address_ << ':'
+                    << server_port_ << "...";
+
+  socket_->connectToHost(server_address_, server_port_);
+}
+
+void TcpClient::onErrorOccurred(QAbstractSocket::SocketError error) {
+  Q_UNUSED(error);
+
+  qWarning() << "Ошибка сокета:" << socket_->errorString();
+
+  if (socket_->state() != QAbstractSocket::ConnectedState) {
+    resetSocketAndScheduleReconnect();
+  }
 }
 
 }  // namespace client

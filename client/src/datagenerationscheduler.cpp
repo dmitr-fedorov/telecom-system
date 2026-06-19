@@ -32,6 +32,12 @@ void DataGenerationScheduler::stop() {
   generation_timer_.stop();
 }
 
+void DataGenerationScheduler::scheduleNextGeneration() {
+  const int delay_ms = QRandomGenerator::global()->bounded(10, 101);
+
+  generation_timer_.start(delay_ms);
+}
+
 void DataGenerationScheduler::generateRandomData() {
   if (!active_) {
     return;
@@ -42,12 +48,6 @@ void DataGenerationScheduler::generateRandomData() {
   emit dataGenerated(randomData);
 
   scheduleNextGeneration();
-}
-
-void DataGenerationScheduler::scheduleNextGeneration() {
-  const int delay_ms = QRandomGenerator::global()->bounded(10, 101);
-
-  generation_timer_.start(delay_ms);
 }
 
 }  // namespace client
