@@ -7,6 +7,8 @@ int main(int argc, char *argv[]) {
 
   qRegisterMetaType<shared::types::LimitsConfig>("shared::types::LimitsConfig");
 
+  setlocale(LC_ALL, "Russian");
+
   client::DeviceEmulator deviceEmulator;
   deviceEmulator.start();
 
