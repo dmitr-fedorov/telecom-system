@@ -26,7 +26,7 @@ ConfigLimitsDialog::ConfigLimitsDialog(QWidget *parent)
           &QSpinBox::setEnabled);
 
   connect(ui->cb_temperature, &QCheckBox::toggled, ui->dsb_temperature,
-          &QSpinBox::setEnabled);
+          &QDoubleSpinBox::setEnabled);
 }
 
 ConfigLimitsDialog::~ConfigLimitsDialog() { delete ui; }

@@ -9,9 +9,6 @@ TcpServerController::TcpServerController(QObject* parent) : QObject(parent) {
   connect(&server_thread_, &QThread::started, tcp_server_,
           &TcpServer::startServer);
 
-  connect(&server_thread_, &QThread::finished, tcp_server_,
-          &QObject::deleteLater);
-
   connect(tcp_server_, &TcpServer::clientConnectionStateChanged, this,
           &TcpServerController::clientConnectionStateChanged);
 
@@ -38,6 +35,9 @@ TcpServerController::~TcpServerController() {
 
   server_thread_.quit();
   server_thread_.wait();
+
+  delete tcp_server_;
+  tcp_server_ = nullptr;
 }
 
 void TcpServerController::startClientsDataTransmission() {
