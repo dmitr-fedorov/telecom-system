@@ -1,6 +1,3 @@
+build-ide
 CMakeLists.txt.user
-build
-client/CMakeLists.txt.user
-client/build
 server/CMakeLists.txt.user
-server/build
