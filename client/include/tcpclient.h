@@ -51,6 +51,8 @@ class TcpClient : public QObject {
 
   QTimer reconnect_timer_;
 
+  bool is_connected_ = false;
+
   void processMessage(const QByteArray& message);
 
   void handleJsonMessage(const QJsonObject& json);
@@ -64,13 +66,13 @@ class TcpClient : public QObject {
   void scheduleReconnect();
 
  private slots:
+  void tryConnect();
+
   void onConnected();
 
   void onDisconnected();
 
   void onReadyRead();
-
-  void tryConnect();
 
   void onErrorOccurred(QAbstractSocket::SocketError error);
 };

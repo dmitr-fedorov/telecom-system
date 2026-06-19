@@ -131,6 +131,8 @@ void TcpClient::handleLimitsConfigMessage(const QJsonObject& json) {
 }
 
 void TcpClient::resetSocketAndScheduleReconnect() {
+  is_connected_ = false;
+
   read_buffer_.clear();
 
   if (socket_) {
@@ -169,12 +171,27 @@ void TcpClient::scheduleReconnect() {
   reconnect_timer_.start();
 }
 
+void TcpClient::tryConnect() {
+  if (!socket_ || socket_->state() != QAbstractSocket::UnconnectedState) {
+    return;
+  }
+
+  qInfo().nospace() << "Подключение к серверу: " << server_address_ << ':'
+                    << server_port_ << "...";
+
+  socket_->connectToHost(server_address_, server_port_);
+}
+
 void TcpClient::onConnected() {
+  is_connected_ = true;
+
   qInfo().nospace() << "Подключено к серверу: " << server_address_ << ':'
                     << server_port_;
 }
 
 void TcpClient::onDisconnected() {
+  is_connected_ = false;
+
   qInfo().nospace() << "Отключено от сервера: " << server_address_ << ':'
                     << server_port_;
 
@@ -202,23 +219,12 @@ void TcpClient::onReadyRead() {
   }
 }
 
-void TcpClient::tryConnect() {
-  if (!socket_ || socket_->state() != QAbstractSocket::UnconnectedState) {
-    return;
-  }
-
-  qInfo().nospace() << "Подключение к серверу: " << server_address_ << ':'
-                    << server_port_ << "...";
-
-  socket_->connectToHost(server_address_, server_port_);
-}
-
 void TcpClient::onErrorOccurred(QAbstractSocket::SocketError error) {
   Q_UNUSED(error);
 
   qWarning() << "Ошибка сокета:" << socket_->errorString();
 
-  if (socket_->state() != QAbstractSocket::ConnectedState) {
+  if (!is_connected_) {
     resetSocketAndScheduleReconnect();
   }
 }
