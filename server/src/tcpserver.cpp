@@ -178,7 +178,9 @@ bool TcpServer::broadcastMessage(const QJsonObject& json) {
 bool TcpServer::sendMessage(QTcpSocket* socket, const QJsonObject& json,
                             const QString& client_id) {
   if (socket == nullptr) {
-    emit eventOccurred("Ошибка: попытка отправить сообщение в null socket");
+    emit eventOccurred(
+        QString("Ошибка: попытка отправить сообщение в null socket клиента %1")
+            .arg(client_id));
 
     return false;
   }
@@ -356,7 +358,6 @@ void TcpServer::onReadyRead() {
   }
 
   auto& buffer = it->buffer;
-
   buffer.append(socket->readAll());
 
   while (true) {
