@@ -17,7 +17,7 @@ class DataValidator : public QObject {
   explicit DataValidator(QObject* parent = nullptr);
 
  public slots:
-  void applyLimitsConfig(shared::types::LimitsConfig& config);
+  void applyLimitsConfig(const shared::types::LimitsConfig& config);
 
   void validate(const QJsonObject& json);
 

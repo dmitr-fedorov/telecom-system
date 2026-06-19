@@ -4,7 +4,8 @@ namespace client {
 
 DataValidator::DataValidator(QObject* parent) : QObject(parent) {}
 
-void DataValidator::applyLimitsConfig(shared::types::LimitsConfig& config) {
+void DataValidator::applyLimitsConfig(
+    const shared::types::LimitsConfig& config) {
   limits_config_ = config;
 }
 

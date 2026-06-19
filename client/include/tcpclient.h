@@ -34,7 +34,7 @@ class TcpClient : public QObject {
 
   void stopTransmissionCommandReceived();
 
-  void limitsConfigReceived(shared::types::LimitsConfig& config);
+  void limitsConfigReceived(const shared::types::LimitsConfig& config);
 
   void disconnected();
 
